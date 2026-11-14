@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@auth/core": "^0.34.3",
     "next": "16.4.6",
     "next-auth": "^4.24.15",
     "react": "19.3.0",
