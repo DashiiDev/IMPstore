@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
@@ -10,13 +10,6 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showAccessMessage, setShowAccessMessage] = useState(false)
   const router = useRouter()
-
-  useEffect(() => {
-    console.log('Session state:', { session, status })
-    if (status === 'authenticated' && session) {
-      console.log('User logged in:', session.user)
-    }
-  }, [session, status])
 
   const games = [
     {
