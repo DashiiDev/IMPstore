@@ -19,6 +19,9 @@ export const authOptions: NextAuthOptions = {
     error: "/",
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      return baseUrl
+    },
     async session({ session, token }) {
       return session
     },
