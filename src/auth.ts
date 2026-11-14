@@ -26,17 +26,17 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async redirect({ url, baseUrl }) {
-      console.log('Redirect callback:', { url, baseUrl })
       if (url.startsWith("/")) return `${baseUrl}${url}`
       else if (new URL(url).origin === baseUrl) return url
       return baseUrl
     },
     async session({ session, token }) {
-      console.log('Session callback:', { session, token })
       return session
     },
   },
-  debug: process.env.NODE_ENV === 'development',
+  session: {
+    strategy: "jwt",
+  },
 }
 
 const handler = NextAuth(authOptions)

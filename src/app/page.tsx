@@ -13,6 +13,9 @@ export default function Home() {
 
   useEffect(() => {
     console.log('Session state:', { session, status })
+    if (status === 'authenticated' && session) {
+      console.log('User logged in:', session.user)
+    }
   }, [session, status])
 
   const games = [
