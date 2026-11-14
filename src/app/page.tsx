@@ -78,13 +78,15 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 bg-purple-900/30 px-4 py-2 rounded-full border border-purple-500/30">
                 {session.user?.image && (
-                  <Image
-                    src={session.user.image}
-                    alt={session.user.name || "User"}
-                    width={40}
-                    height={40}
-                    className="rounded-full border-2 border-purple-500"
-                  />
+                  <div className="relative w-10 h-10">
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      fill
+                      className="rounded-full border-2 border-purple-500 object-cover"
+                      unoptimized
+                    />
+                  </div>
                 )}
                 <span className="text-white font-semibold">{session.user?.name}</span>
               </div>
