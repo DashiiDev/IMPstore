@@ -1,8 +1,8 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 import Image from "next/image"
 
 interface GameData {
@@ -11,7 +11,41 @@ interface GameData {
   ranks: Array<{
     name: string
     image: string
+    emoji: string
   }>
+}
+
+const prices = {
+  "1v1": {
+    Bronze: 20,
+    Silver: 18,
+    Gold: 16,
+    Platinum: 14,
+    Diamond: 12,
+    Champion: 7,
+  },
+  "2v2": {
+    Bronze: 16,
+    Silver: 14,
+    Gold: 12,
+    Platinum: 10,
+    Diamond: 8,
+    Champion: 6,
+  },
+  "Hoops": {
+    Bronze: 14,
+    Silver: 12,
+    Gold: 10,
+    Platinum: 8,
+    Diamond: 6,
+    Champion: 4,
+  },
+}
+
+const extraServices = {
+  "Top 50 Mundial": 30,
+  "Top 10 Mundial": 40,
+  "Top 1 Mundial": 75,
 }
 
 const gamesData: Record<string, GameData> = {
@@ -19,65 +53,65 @@ const gamesData: Record<string, GameData> = {
     id: "rocket-league",
     name: "Rocket League",
     ranks: [
-      { name: "Bronze 1", image: "/imgs/ranks/rl/Bronze 1 RL.png" },
-      { name: "Bronze 2", image: "/imgs/ranks/rl/Bronze 2 RL.png" },
-      { name: "Bronze 3", image: "/imgs/ranks/rl/Bronze 3 RL.png" },
-      { name: "Silver 1", image: "/imgs/ranks/rl/Silver 1 RL.png" },
-      { name: "Silver 2", image: "/imgs/ranks/rl/Silver 2 RL.png" },
-      { name: "Silver 3", image: "/imgs/ranks/rl/Silver 3 RL.png" },
-      { name: "Gold 1", image: "/imgs/ranks/rl/Gold 1 RL.png" },
-      { name: "Gold 2", image: "/imgs/ranks/rl/Gold 2 RL.png" },
-      { name: "Gold 3", image: "/imgs/ranks/rl/Gold 3 RL.png" },
-      { name: "Platinum 1", image: "/imgs/ranks/rl/Platinum 1 RL.png" },
-      { name: "Platinum 2", image: "/imgs/ranks/rl/Platinum 2 RL.png" },
-      { name: "Platinum 3", image: "/imgs/ranks/rl/Platinum 3 RL.png" },
-      { name: "Diamond 1", image: "/imgs/ranks/rl/Diamond 1 RL.png" },
-      { name: "Diamond 2", image: "/imgs/ranks/rl/Diamond 2 RL.png" },
-      { name: "Diamond 3", image: "/imgs/ranks/rl/Diamond 3 RL.png" },
-      { name: "Champion 1", image: "/imgs/ranks/rl/Champion 1 RL.png" },
-      { name: "Champion 2", image: "/imgs/ranks/rl/Champion 2 RL.png" },
-      { name: "Champion 3", image: "/imgs/ranks/rl/Champion 3 RL.png" },
-      { name: "Grand Champion 1", image: "/imgs/ranks/rl/Grand Champion 1 RL.png" },
-      { name: "GC 2", image: "/imgs/ranks/rl/GC 2 RL.png" },
-      { name: "GC 3", image: "/imgs/ranks/rl/GC 3 RL.png" },
-      { name: "SSL", image: "/imgs/ranks/rl/SSL RL.png" },
+      { name: "Bronze 1", image: "/imgs/ranks/rl/Bronze 1 RL.png", emoji: "🥉" },
+      { name: "Bronze 2", image: "/imgs/ranks/rl/Bronze 2 RL.png", emoji: "🥉" },
+      { name: "Bronze 3", image: "/imgs/ranks/rl/Bronze 3 RL.png", emoji: "🥉" },
+      { name: "Silver 1", image: "/imgs/ranks/rl/Silver 1 RL.png", emoji: "🥈" },
+      { name: "Silver 2", image: "/imgs/ranks/rl/Silver 2 RL.png", emoji: "🥈" },
+      { name: "Silver 3", image: "/imgs/ranks/rl/Silver 3 RL.png", emoji: "🥈" },
+      { name: "Gold 1", image: "/imgs/ranks/rl/Gold 1 RL.png", emoji: "🥇" },
+      { name: "Gold 2", image: "/imgs/ranks/rl/Gold 2 RL.png", emoji: "🥇" },
+      { name: "Gold 3", image: "/imgs/ranks/rl/Gold 3 RL.png", emoji: "🥇" },
+      { name: "Platinum 1", image: "/imgs/ranks/rl/Platinum 1 RL.png", emoji: "💎" },
+      { name: "Platinum 2", image: "/imgs/ranks/rl/Platinum 2 RL.png", emoji: "💎" },
+      { name: "Platinum 3", image: "/imgs/ranks/rl/Platinum 3 RL.png", emoji: "💎" },
+      { name: "Diamond 1", image: "/imgs/ranks/rl/Diamond 1 RL.png", emoji: "💠" },
+      { name: "Diamond 2", image: "/imgs/ranks/rl/Diamond 2 RL.png", emoji: "💠" },
+      { name: "Diamond 3", image: "/imgs/ranks/rl/Diamond 3 RL.png", emoji: "💠" },
+      { name: "Champion 1", image: "/imgs/ranks/rl/Champion 1 RL.png", emoji: "🏆" },
+      { name: "Champion 2", image: "/imgs/ranks/rl/Champion 2 RL.png", emoji: "🏆" },
+      { name: "Champion 3", image: "/imgs/ranks/rl/Champion 3 RL.png", emoji: "🏆" },
+      { name: "GC 1", image: "/imgs/ranks/rl/GC 1 RL.png", emoji: "👑" },
+      { name: "GC 2", image: "/imgs/ranks/rl/GC 2 RL.png", emoji: "👑" },
+      { name: "GC 3", image: "/imgs/ranks/rl/GC 3 RL.png", emoji: "👑" },
+      { name: "SSL", image: "/imgs/ranks/rl/SSL RL.png", emoji: "🏅" },
     ]
   },
   "rocket-league-sideswipe": {
     id: "rocket-league-sideswipe",
     name: "Rocket League Sideswipe",
     ranks: [
-      { name: "Bronze 1", image: "/imgs/ranks/rlss/Bronze 1.png" },
-      { name: "Bronze 2", image: "/imgs/ranks/rlss/Bronze 2.png" },
-      { name: "Bronze 3", image: "/imgs/ranks/rlss/Bronze 3.png" },
-      { name: "Bronze 4", image: "/imgs/ranks/rlss/Bronze 4.png" },
-      { name: "Bronze 5", image: "/imgs/ranks/rlss/Bronze 5.png" },
-      { name: "Silver 1", image: "/imgs/ranks/rlss/Silver 1.png" },
-      { name: "Silver 2", image: "/imgs/ranks/rlss/Silver 2.png" },
-      { name: "Silver 3", image: "/imgs/ranks/rlss/Silver 3.png" },
-      { name: "Silver 4", image: "/imgs/ranks/rlss/Silver 4.png" },
-      { name: "Silver 5", image: "/imgs/ranks/rlss/Silver 5.png" },
-      { name: "Gold 1", image: "/imgs/ranks/rlss/Gold 1.png" },
-      { name: "Gold 2", image: "/imgs/ranks/rlss/Gold 2.png" },
-      { name: "Gold 3", image: "/imgs/ranks/rlss/Gold 3.png" },
-      { name: "Gold 4", image: "/imgs/ranks/rlss/Gold 4.png" },
-      { name: "Gold 5", image: "/imgs/ranks/rlss/Gold 5.png" },
-      { name: "Platinum 1", image: "/imgs/ranks/rlss/Platinum 1.png" },
-      { name: "Platinum 2", image: "/imgs/ranks/rlss/Platinum 2.png" },
-      { name: "Platinum 3", image: "/imgs/ranks/rlss/Platinum 3.png" },
-      { name: "Platinum 4", image: "/imgs/ranks/rlss/Platinum 4.png" },
-      { name: "Platinum 5", image: "/imgs/ranks/rlss/Platinum 5.png" },
-      { name: "Diamond 1", image: "/imgs/ranks/rlss/Diamond 1.png" },
-      { name: "Diamond 2", image: "/imgs/ranks/rlss/Diamond 2.png" },
-      { name: "Diamond 3", image: "/imgs/ranks/rlss/Diamond 3.png" },
-      { name: "Diamond 4", image: "/imgs/ranks/rlss/Diamond 4.png" },
-      { name: "Diamond 5", image: "/imgs/ranks/rlss/Diamond 5.png" },
-      { name: "Champion 1", image: "/imgs/ranks/rlss/Champion 1.png" },
-      { name: "Champion 2", image: "/imgs/ranks/rlss/Champion 2.png" },
-      { name: "Champion 3", image: "/imgs/ranks/rlss/Champion 3.png" },
-      { name: "Champion 4", image: "/imgs/ranks/rlss/Champion 4.png" },
-      { name: "Champion 5", image: "/imgs/ranks/rlss/Champion 5.png" },
-      { name: "GC", image: "/imgs/ranks/rlss/GC.png" },
+      { name: "Bronze 1", image: "/imgs/ranks/rlss/Bronze 1.png", emoji: "🥉" },
+      { name: "Bronze 2", image: "/imgs/ranks/rlss/Bronze 2.png", emoji: "🥉" },
+      { name: "Bronze 3", image: "/imgs/ranks/rlss/Bronze 3.png", emoji: "🥉" },
+      { name: "Bronze 4", image: "/imgs/ranks/rlss/Bronze 4.png", emoji: "🥉" },
+      { name: "Bronze 5", image: "/imgs/ranks/rlss/Bronze 5.png", emoji: "🥉" },
+      { name: "Silver 1", image: "/imgs/ranks/rlss/Silver 1.png", emoji: "🥈" },
+      { name: "Silver 2", image: "/imgs/ranks/rlss/Silver 2.png", emoji: "🥈" },
+      { name: "Silver 3", image: "/imgs/ranks/rlss/Silver 3.png", emoji: "🥈" },
+      { name: "Silver 4", image: "/imgs/ranks/rlss/Silver 4.png", emoji: "🥈" },
+      { name: "Silver 5", image: "/imgs/ranks/rlss/Silver 5.png", emoji: "🥈" },
+      { name: "Gold 1", image: "/imgs/ranks/rlss/Gold 1.png", emoji: "🥇" },
+      { name: "Gold 2", image: "/imgs/ranks/rlss/Gold 2.png", emoji: "🥇" },
+      { name: "Gold 3", image: "/imgs/ranks/rlss/Gold 3.png", emoji: "🥇" },
+      { name: "Gold 4", image: "/imgs/ranks/rlss/Gold 4.png", emoji: "🥇" },
+      { name: "Gold 5", image: "/imgs/ranks/rlss/Gold 5.png", emoji: "🥇" },
+      { name: "Platinum 1", image: "/imgs/ranks/rlss/Platinum 1.png", emoji: "💎" },
+      { name: "Platinum 2", image: "/imgs/ranks/rlss/Platinum 2.png", emoji: "💎" },
+      { name: "Platinum 3", image: "/imgs/ranks/rlss/Platinum 3.png", emoji: "💎" },
+      { name: "Platinum 4", image: "/imgs/ranks/rlss/Platinum 4.png", emoji: "💎" },
+      { name: "Platinum 5", image: "/imgs/ranks/rlss/Platinum 5.png", emoji: "💎" },
+      { name: "Diamond 1", image: "/imgs/ranks/rlss/Diamond 1.png", emoji: "💠" },
+      { name: "Diamond 2", image: "/imgs/ranks/rlss/Diamond 2.png", emoji: "💠" },
+      { name: "Diamond 3", image: "/imgs/ranks/rlss/Diamond 3.png", emoji: "💠" },
+      { name: "Diamond 4", image: "/imgs/ranks/rlss/Diamond 4.png", emoji: "💠" },
+      { name: "Diamond 5", image: "/imgs/ranks/rlss/Diamond 5.png", emoji: "💠" },
+      { name: "Champion 1", image: "/imgs/ranks/rlss/Champion 1.png", emoji: "🏆" },
+      { name: "Champion 2", image: "/imgs/ranks/rlss/Champion 2.png", emoji: "🏆" },
+      { name: "Champion 3", image: "/imgs/ranks/rlss/Champion 3.png", emoji: "🏆" },
+      { name: "Champion 4", image: "/imgs/ranks/rlss/Champion 4.png", emoji: "🏆" },
+      { name: "Champion 5", image: "/imgs/ranks/rlss/Champion 5.png", emoji: "🏆" },
+      { name: "GC", image: "/imgs/ranks/rlss/GC.png", emoji: "👑" },
     ]
   }
 }
@@ -86,6 +120,12 @@ export default function BoostingPage({ params }: { params: { gameId: string } })
   const { data: session, status } = useSession()
   const router = useRouter()
   const game = gamesData[params.gameId]
+
+  const [currentRank, setCurrentRank] = useState("")
+  const [desiredRank, setDesiredRank] = useState("")
+  const [mode, setMode] = useState("1v1")
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+  const [showModeSelection, setShowModeSelection] = useState(false)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -110,12 +150,69 @@ export default function BoostingPage({ params }: { params: { gameId: string } })
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+          <div background-0 className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         </div>
         <div className="relative z-10 text-white text-2xl font-semibold">Game not found</div>
       </div>
     )
   }
+
+  const handleRankSelect = (rankName: string, type: "current" | "desired") => {
+    if (type === "current") {
+      setCurrentRank(rankName)
+    } else {
+      setDesiredRank(rankName)
+    }
+  }
+
+  const handleModeSelect = (selectedMode: string) => {
+    setMode(selectedMode)
+  }
+
+  const handleExtraToggle = (extra: string) => {
+    setSelectedExtras(prev =>
+      prev.includes(extra) ? prev.filter(e => e !== extra) : [...prev, extra]
+    )
+  }
+
+  const calculatePrice = () => {
+    if (!currentRank || !desiredRank) return 0
+
+    const rankOrder = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Champion"]
+    const currentBaseRank = currentRank.split(" ")[0]
+    const desiredBaseRank = desiredRank.split(" ")[0]
+
+    const currentIndex = rankOrder.indexOf(currentBaseRank)
+    const desiredIndex = rankOrder.indexOf(desiredBaseRank)
+
+    if (currentIndex >= desiredIndex) return 0
+
+    let basePrice = 0
+    for (let i = currentIndex; i < desiredIndex; i++) {
+      const modePrices = prices[mode as keyof typeof prices]
+      const rankPrice = modePrices[rankOrder[i] as keyof typeof modePrices]
+      basePrice += rankPrice
+    }
+
+    const extrasPrice = selectedExtras.reduce((sum, extra) => {
+      const extraPrice = extraServices[extra as keyof typeof extraServices]
+      return sum + extraPrice
+    }, 0)
+
+    return basePrice + extrasPrice
+  }
+
+  const totalPrice = calculatePrice()
+
+  const filteredRanks = game.ranks.filter(rank => {
+    if (currentRank && desiredRank) {
+      const currentBase = currentRank.split(" ")[0]
+      const desiredBase = desiredRank.split(" ")[0]
+      const currentOrder = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Champion"]
+      return currentOrder.includes(rank.name.split(" ")[0])
+    }
+    return true
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 relative overflow-hidden">
@@ -169,79 +266,175 @@ export default function BoostingPage({ params }: { params: { gameId: string } })
       </header>
 
       {/* Game Header */}
-      <section className="pt-40 pb-16 px-4 relative">
+      <section className="pt-40 pb-8 px-4 relative">
         <div className="container mx-auto text-center relative z-10">
-          <h2 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-6">
+          <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-4">
             {game.name}
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Select your current rank and desired rank to purchase boosting services
-          </p>
+          <p className="text-gray-300">Select your current rank and desired rank to calculate the price</p>
         </div>
       </section>
 
-      {/* Ranks Grid */}
-      <section className="py-12 px-4 relative">
-        <div className="container mx-auto relative z-10">
-          <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-12">
-            Available Ranks
-          </h3>
-          <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-6 max-w-7xl mx-auto">
-            {game.ranks.map((rank) => (
-              <div
-                key={rank.name}
-                className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-4 hover:bg-purple-900/30 transition-all duration-300 hover:scale-105 cursor-pointer border border-purple-500/30 hover:border-purple-500/60 shadow-lg hover:shadow-purple-500/20"
-              >
-                <div className="relative w-full aspect-square mb-3">
-                  <Image
-                    src={rank.image}
-                    alt={rank.name}
-                    fill
-                    className="object-contain"
-                  />
+      {/* Rank Selection */}
+      {!showModeSelection ? (
+        <section className="py-8 px-4 relative">
+          <div className="container mx-auto relative z-10">
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {/* Current Rank */}
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30">
+                <h3 className="text-2xl font-bold text-white mb-4 text-center">Current Rank</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {filteredRanks.map((rank) => (
+                    <div
+                      key={rank.name}
+                      onClick={() => handleRankSelect(rank.name, "current")}
+                      className={`relative aspect-square rounded-2xl p-2 cursor-pointer transition-all duration-300 hover:scale-105 border-2 ${
+                        currentRank === rank.name
+                          ? "border-purple-500 bg-purple-900/50"
+                          : "border-transparent hover:border-purple-500/50"
+                      }`}
+                    >
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={rank.image}
+                          alt={rank.name}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <p className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white text-xs font-semibold bg-black/70 px-2 py-1 rounded-full">
+                        {rank.emoji}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-white text-center text-sm font-semibold">{rank.name}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Services Section */}
-      <section className="py-16 px-4 relative">
-        <div className="container mx-auto max-w-5xl relative z-10">
-          <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-12">
-            Available Services
-          </h3>
-          <div className="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto">
-            <div className="bg-gray-900/50 backdrop-blur-sm rounded-3xl p-8 border border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-purple-500/20">
-              <h4 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6">
-                Boosting
-              </h4>
-              <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                Our professional boosters play on your account to rank you up
-              </p>
-              <ul className="text-gray-300 space-y-3">
-                <li className="flex items-center gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Secure VPN</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>Optional streaming</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-green-500 text-xl">✓</span>
-                  <span>High MMR boosters</span>
-                </li>
-              </ul>
-              <button className="mt-8 w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 border border-purple-500/30">
-                Purchase Boosting
-              </button>
+              {/* Desired Rank */}
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30">
+                <h3 className="text-2xl font-bold text-white mb-4 text-center">Desired Rank</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {filteredRanks.map((rank) => (
+                    <div
+                      key={rank.name}
+                      onClick={() => handleRankSelect(rank.name, "desired")}
+                      className={`relative aspect-square rounded-2xl p-2 cursor-pointer transition-all duration-300 hover:scale-105 border-2 ${
+                        desiredRank === rank.name
+                          ? "border-pink-500 bg-pink-900/50"
+                          : "border-transparent hover:border-pink-500/50"
+                      }`}
+                    >
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={rank.image}
+                          alt={rank.name}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <p className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white text-xs font-semibold bg-black/70 px-2 py-1 rounded-full">
+                        {rank.emoji}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            {currentRank && desiredRank && (
+              <div className="mt-8 text-center">
+                <button
+                  onClick={() => setShowModeSelection(true)}
+                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 border border-purple-500/30"
+                >
+                  Next: Select Mode
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <>
+          {/* Mode Selection */}
+          <section className="py-8 px-4 relative">
+            <div className="container mx-auto relative z-10 max-w-3xl">
+              <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-8">
+                Select Mode
+              </h3>
+              <div className="grid grid-cols-3 gap-6">
+                {["1v1", "2v2", "Hoops"].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => handleModeSelect(m)}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
+                      mode === m
+                        ? "border-purple-500 bg-purple-900/50"
+                        : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
+                    }`}
+                  >
+                    <p className="text-2xl font-bold text-white mb-2">{m}</p>
+                    <p className="text-gray-400 text-sm">
+                      ${prices[m as keyof typeof prices][currentRank.split(" ")[0] as "Bronze" | "Silver" | "Gold" | "Platinum" | "Diamond" | "Champion"]}$
+                    </p>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => setShowModeSelection(false)}
+                  className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all duration-300"
+                >
+                  Back to Rank Selection
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Extra Services */}
+          <section className="py-8 px-4 relative">
+            <div className="container mx-auto relative z-10 max-w-3xl">
+              <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-8">
+                Extra Services
+              </h3>
+              <div className="space-y-4">
+                {Object.entries(extraServices).map(([service, price]) => (
+                  <div
+                    key={service}
+                    onClick={() => handleExtraToggle(service)}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex justify-between items-center ${
+                      selectedExtras.includes(service)
+                        ? "border-purple-500 bg-purple-900/50"
+                        : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
+                    }`}
+                  >
+                    <span className="text-white font-semibold">{service}</span>
+                    <span className="text-purple-300 font-bold">${price}$</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Total Price */}
+          <section className="py-8 px-4 relative">
+            <div className="container mx-auto relative z-10 max-w-3xl">
+              <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 backdrop-blur-sm rounded-3xl p-8 border border-purple-500/30">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-3xl font-bold text-white">Total</h3>
+                  <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                    ${totalPrice}$
+                  </p>
+                </div>
+                <button
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 border border-purple-500/30"
+                >
+                  Purchase Boosting
+                </button>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   )
 }
