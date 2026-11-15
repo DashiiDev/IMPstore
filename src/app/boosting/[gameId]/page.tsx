@@ -48,6 +48,7 @@ const extraServices = {
   "Top 1 Mundial": 75,
 }
 
+// Boosting page with rank selection and price calculation
 const gamesData: Record<string, GameData> = {
   "rocket-league": {
     id: "rocket-league",
@@ -150,7 +151,7 @@ export default function BoostingPage({ params }: { params: { gameId: string } })
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
-          <div background-0 className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         </div>
         <div className="relative z-10 text-white text-2xl font-semibold">Game not found</div>
       </div>
