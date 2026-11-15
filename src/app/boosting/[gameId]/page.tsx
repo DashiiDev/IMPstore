@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 
 interface GameData {
@@ -116,17 +116,13 @@ const gamesData: Record<string, GameData> = {
   }
 }
 
-export default function BoostingPage({ params }: { params: { gameId: string } }) {
+export default function BoostingPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const params = useParams()
+  const gameId = params.gameId as string
 
-  console.log("Game ID from params:", params.gameId)
-  console.log("Available game IDs:", Object.keys(gamesData))
-  console.log("Type of gameId:", typeof params.gameId)
-
-  const game = gamesData[params.gameId]
-
-  console.log("Game found:", game)
+  const game = gamesData[gameId]
 
   const [currentRank, setCurrentRank] = useState("")
   const [desiredRank, setDesiredRank] = useState("")
