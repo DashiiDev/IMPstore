@@ -120,7 +120,14 @@ export default function BoostingPage({ params }: { params: { gameId: string } })
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  console.log("Params:", params)
+  console.log("Game ID:", params.gameId)
+  console.log("Available games:", Object.keys(gamesData))
+  console.log("Looking for:", params.gameId)
+
   const game = gamesData[params.gameId]
+
+  console.log("Found game:", game)
 
   const [currentRank, setCurrentRank] = useState("")
   const [desiredRank, setDesiredRank] = useState("")
