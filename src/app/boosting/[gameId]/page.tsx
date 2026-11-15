@@ -48,7 +48,6 @@ const extraServices = {
   "Top 1 Mundial": 75,
 }
 
-// Boosting page with rank selection and price calculation
 const gamesData: Record<string, GameData> = {
   "rocket-league": {
     id: "rocket-league",
@@ -120,10 +119,8 @@ const gamesData: Record<string, GameData> = {
 export default function BoostingPage({ params }: { params: { gameId: string } }) {
   const { data: session, status } = useSession()
   const router = useRouter()
-  
-  // Normalize game ID to handle case sensitivity
-  const normalizedGameId = params.gameId
-  const game = gamesData[normalizedGameId]
+
+  const game = gamesData[params.gameId]
 
   const [currentRank, setCurrentRank] = useState("")
   const [desiredRank, setDesiredRank] = useState("")
@@ -158,7 +155,7 @@ export default function BoostingPage({ params }: { params: { gameId: string } })
         </div>
         <div className="relative z-10 text-center">
           <div className="text-white text-2xl font-semibold mb-4">Game not found</div>
-          <div className="text-gray-400 text-sm">Game ID: {normalizedGameId}</div>
+          <div className="text-gray-400 text-sm">Game ID: {params.gameId}</div>
           <button
             onClick={() => router.push("/")}
             className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-all"
