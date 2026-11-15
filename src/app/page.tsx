@@ -9,6 +9,7 @@ export default function Home() {
   const { data: session, status } = useSession()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showAccessMessage, setShowAccessMessage] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
   const router = useRouter()
 
   const games = [
@@ -84,6 +85,7 @@ export default function Home() {
                 <span className="text-white font-semibold">{session.user?.name}</span>
               </div>
               <button
+                onClick={() => setShowSettingsModal(true)}
                 className="p-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-full border border-purple-500/30 transition-all"
               >
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,6 +249,52 @@ export default function Home() {
           <p className="font-semibold text-lg">
             ⚠️ Please login to access boosting services
           </p>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                Settings
+              </h3>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="text-gray-400 hover:text-white text-3xl transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                className="w-full flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg shadow-green-500/30 border border-green-500/30"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Booster Login
+              </button>
+
+              <button
+                className="w-full flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg shadow-purple-500/30 border border-purple-500/30"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Admin Login
+              </button>
+            </div>
+
+            <p className="text-center text-gray-400 text-sm mt-6">
+              Booster login: For boosters to manage their availability
+            </p>
+            <p className="text-center text-gray-400 text-sm">
+              Admin login: Only for administrators
+            </p>
+          </div>
         </div>
       )}
     </div>
