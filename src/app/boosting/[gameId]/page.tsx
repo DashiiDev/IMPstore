@@ -122,6 +122,9 @@ export default function BoostingPage() {
   const params = useParams()
   const gameId = params.gameId as string
 
+  console.log("GameId from useParams:", gameId)
+  console.log("Available games:", Object.keys(gamesData))
+
   const game = gamesData[gameId]
 
   const [currentRank, setCurrentRank] = useState("")
