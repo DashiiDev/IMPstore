@@ -116,6 +116,17 @@ const gamesData: Record<string, GameData> = {
   }
 }
 
+// Filter ranks for current selection (exclude GC and above)
+const currentRanks = (gameId: string) => {
+  const ranks = gamesData[gameId]?.ranks || []
+  return ranks.filter(rank => !rank.name.includes("GC") && !rank.name.includes("SSL"))
+}
+
+// All ranks for desired selection
+const desiredRanks = (gameId: string) => {
+  return gamesData[gameId]?.ranks || []
+}
+
 export default function BoostingPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -127,7 +138,7 @@ export default function BoostingPage() {
   const [currentRank, setCurrentRank] = useState("")
   const [desiredRank, setDesiredRank] = useState("")
   const [mode, setMode] = useState("1v1")
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+  const [selectedExtra, setSelectedExtra] = useState<string>("")
   const [showModeSelection, setShowModeSelection] = useState(false)
 
   useEffect(() => {
@@ -180,10 +191,8 @@ export default function BoostingPage() {
     setMode(selectedMode)
   }
 
-  const handleExtraToggle = (extra: string) => {
-    setSelectedExtras(prev =>
-      prev.includes(extra) ? prev.filter(e => e !== extra) : [...prev, extra]
-    )
+  const handleExtraSelect = (extra: string) => {
+    setSelectedExtra(extra === selectedExtra ? "" : extra)
   }
 
   const calculatePrice = () => {
@@ -205,25 +214,12 @@ export default function BoostingPage() {
       basePrice += rankPrice
     }
 
-    const extrasPrice = selectedExtras.reduce((sum, extra) => {
-      const extraPrice = extraServices[extra as keyof typeof extraServices]
-      return sum + extraPrice
-    }, 0)
+    const extrasPrice = selectedExtra ? extraServices[selectedExtra as keyof typeof extraServices] : 0
 
     return basePrice + extrasPrice
   }
 
   const totalPrice = calculatePrice()
-
-  const filteredRanks = game.ranks.filter(rank => {
-    if (currentRank && desiredRank) {
-      const currentBase = currentRank.split(" ")[0]
-      const desiredBase = desiredRank.split(" ")[0]
-      const currentOrder = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Champion"]
-      return currentOrder.includes(rank.name.split(" ")[0])
-    }
-    return true
-  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 relative overflow-hidden">
@@ -255,15 +251,17 @@ export default function BoostingPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-purple-900/30 px-4 py-2 rounded-full border border-purple-500/30">
+            <div className="flex items-center gap-3 bg-purple-900/30 px-4 py-2 rounded-full border border-purple-500/30">
               {session?.user?.image && (
-                <Image
-                  src={session.user.image}
-                  alt={session.user.name || "User"}
-                  width={40}
-                  height={40}
-                  className="rounded-full border-2 border-purple-500"
-                />
+                <div className="relative w-12 h-12">
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
+                    fill
+                    className="rounded-full border-2 border-purple-500 object-cover"
+                    unoptimized
+                  />
+                </div>
               )}
               <span className="text-white font-semibold">{session?.user?.name}</span>
             </div>
@@ -290,68 +288,66 @@ export default function BoostingPage() {
       {/* Rank Selection */}
       {!showModeSelection ? (
         <section className="py-8 px-4 relative">
-          <div className="container mx-auto relative z-10">
-            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="container mx-auto relative z-10 max-w-3xl">
+            <div className="space-y-6">
               {/* Current Rank */}
-              <div className="bg-gray-900/50 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30">
-                <h3 className="text-2xl font-bold text-white mb-4 text-center">Current Rank</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  {filteredRanks.map((rank) => (
-                    <div
-                      key={rank.name}
-                      onClick={() => handleRankSelect(rank.name, "current")}
-                      className={`relative aspect-square rounded-2xl p-2 cursor-pointer transition-all duration-300 hover:scale-105 border-2 ${
-                        currentRank === rank.name
-                          ? "border-purple-500 bg-purple-900/50"
-                          : "border-transparent hover:border-purple-500/50"
-                      }`}
-                    >
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={rank.image}
-                          alt={rank.name}
-                          fill
-                          className="object-contain"
-                          unoptimized
-                        />
-                      </div>
-                      <p className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white text-xs font-semibold bg-black/70 px-2 py-1 rounded-full">
-                        {rank.emoji}
-                      </p>
-                    </div>
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/30">
+                <h3 className="text-xl font-bold text-white mb-4">Current Rank</h3>
+                <select
+                  value={currentRank}
+                  onChange={(e) => setCurrentRank(e.target.value)}
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-purple-500/30 focus:border-purple-500 focus:outline-none"
+                >
+                  <option value="">Select your current rank</option>
+                  {currentRanks(gameId).map((rank) => (
+                    <option key={rank.name} value={rank.name}>
+                      {rank.emoji} {rank.name}
+                    </option>
                   ))}
-                </div>
+                </select>
+                {currentRank && (
+                  <div className="mt-4 flex items-center justify-center">
+                    <div className="relative w-24 h-24">
+                      <Image
+                        src={game.ranks.find(r => r.name === currentRank)?.image || ""}
+                        alt={currentRank}
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Desired Rank */}
-              <div className="bg-gray-900/50 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30">
-                <h3 className="text-2xl font-bold text-white mb-4 text-center">Desired Rank</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  {filteredRanks.map((rank) => (
-                    <div
-                      key={rank.name}
-                      onClick={() => handleRankSelect(rank.name, "desired")}
-                      className={`relative aspect-square rounded-2xl p-2 cursor-pointer transition-all duration-300 hover:scale-105 border-2 ${
-                        desiredRank === rank.name
-                          ? "border-pink-500 bg-pink-900/50"
-                          : "border-transparent hover:border-pink-500/50"
-                      }`}
-                    >
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={rank.image}
-                          alt={rank.name}
-                          fill
-                          className="object-contain"
-                          unoptimized
-                        />
-                      </div>
-                      <p className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white text-xs font-semibold bg-black/70 px-2 py-1 rounded-full">
-                        {rank.emoji}
-                      </p>
-                    </div>
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-pink-500/30">
+                <h3 className="text-xl font-bold text-white mb-4">Desired Rank</h3>
+                <select
+                  value={desiredRank}
+                  onChange={(e) => setDesiredRank(e.target.value)}
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-pink-500/30 focus:border-pink-500 focus:outline-none"
+                >
+                  <option value="">Select your desired rank</option>
+                  {desiredRanks(gameId).map((rank) => (
+                    <option key={rank.name} value={rank.name}>
+                      {rank.emoji} {rank.name}
+                    </option>
                   ))}
-                </div>
+                </select>
+                {desiredRank && (
+                  <div className="mt-4 flex items-center justify-center">
+                    <div className="relative w-24 h-24">
+                      <Image
+                        src={game.ranks.find(r => r.name === desiredRank)?.image || ""}
+                        alt={desiredRank}
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -408,15 +404,26 @@ export default function BoostingPage() {
           <section className="py-8 px-4 relative">
             <div className="container mx-auto relative z-10 max-w-3xl">
               <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-8">
-                Extra Services
+                Extra Services (Optional)
               </h3>
               <div className="space-y-4">
+                <div
+                  onClick={() => handleExtraSelect("")}
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex justify-between items-center ${
+                    selectedExtra === ""
+                      ? "border-purple-500 bg-purple-900/50"
+                      : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
+                  }`}
+                >
+                  <span className="text-white font-semibold">No extra service</span>
+                  <span className="text-gray-400 font-bold">$0</span>
+                </div>
                 {Object.entries(extraServices).map(([service, price]) => (
                   <div
                     key={service}
-                    onClick={() => handleExtraToggle(service)}
+                    onClick={() => handleExtraSelect(service)}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex justify-between items-center ${
-                      selectedExtras.includes(service)
+                      selectedExtra === service
                         ? "border-purple-500 bg-purple-900/50"
                         : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
                     }`}
