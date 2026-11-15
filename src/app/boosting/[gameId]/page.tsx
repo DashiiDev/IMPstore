@@ -43,9 +43,11 @@ const prices = {
 }
 
 const extraServices = {
+  "No extra service": 0,
   "Top 50 Mundial": 30,
   "Top 10 Mundial": 40,
   "Top 1 Mundial": 75,
+  "Play with Booster": 6,
 }
 
 const gamesData: Record<string, GameData> = {
@@ -266,6 +268,18 @@ export default function BoostingPage() {
               <span className="text-white font-semibold">{session?.user?.name}</span>
             </div>
             <button
+              className="relative p-2 bg-purple-900/30 hover:bg-purple-800/50 rounded-full border border-purple-500/30 transition-all"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
+            <button
+              className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-all duration-300 font-semibold border border-green-500/30"
+            >
+              Become a Booster
+            </button>
+            <button
               onClick={() => router.push("/")}
               className="px-6 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-lg transition-all duration-300 border border-purple-500/30"
             >
@@ -301,7 +315,7 @@ export default function BoostingPage() {
                   <option value="">Select your current rank</option>
                   {currentRanks(gameId).map((rank) => (
                     <option key={rank.name} value={rank.name}>
-                      {rank.emoji} {rank.name}
+                      {rank.name}
                     </option>
                   ))}
                 </select>
@@ -331,7 +345,7 @@ export default function BoostingPage() {
                   <option value="">Select your desired rank</option>
                   {desiredRanks(gameId).map((rank) => (
                     <option key={rank.name} value={rank.name}>
-                      {rank.emoji} {rank.name}
+                      {rank.name}
                     </option>
                   ))}
                 </select>
@@ -406,32 +420,54 @@ export default function BoostingPage() {
               <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-8">
                 Extra Services (Optional)
               </h3>
-              <div className="space-y-4">
-                <div
-                  onClick={() => handleExtraSelect("")}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex justify-between items-center ${
-                    selectedExtra === ""
-                      ? "border-purple-500 bg-purple-900/50"
-                      : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
-                  }`}
-                >
-                  <span className="text-white font-semibold">No extra service</span>
-                  <span className="text-gray-400 font-bold">$0</span>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(extraServices)
+                  .filter(([service]) => service !== "Play with Booster" || mode !== "1v1")
+                  .map(([service, price]) => (
+                    <div
+                      key={service}
+                      onClick={() => handleExtraSelect(service)}
+                      className={`relative aspect-square rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-105 border-2 flex flex-col items-center justify-center ${
+                        selectedExtra === service
+                          ? "border-purple-500 bg-purple-900/50"
+                          : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
+                      }`}
+                    >
+                      <span className="text-white font-semibold text-center text-sm mb-2">{service}</span>
+                      <span className="text-purple-300 font-bold text-lg">${price}$</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Available Boosters */}
+          <section className="py-8 px-4 relative">
+            <div className="container mx-auto relative z-10 max-w-3xl">
+              <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-8">
+                Available Boosters
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-green-900/30 border-2 border-green-500 rounded-xl p-4 flex flex-col items-center">
+                  <div className="w-12 h-12 bg-green-500 rounded-full mb-2" />
+                  <span className="text-white font-semibold text-sm">Booster 1</span>
+                  <span className="text-green-400 text-xs">Online</span>
                 </div>
-                {Object.entries(extraServices).map(([service, price]) => (
-                  <div
-                    key={service}
-                    onClick={() => handleExtraSelect(service)}
-                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex justify-between items-center ${
-                      selectedExtra === service
-                        ? "border-purple-500 bg-purple-900/50"
-                        : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
-                    }`}
-                  >
-                    <span className="text-white font-semibold">{service}</span>
-                    <span className="text-purple-300 font-bold">${price}$</span>
-                  </div>
-                ))}
+                <div className="bg-gray-900/30 border-2 border-gray-500 rounded-xl p-4 flex flex-col items-center">
+                  <div className="w-12 h-12 bg-gray-500 rounded-full mb-2" />
+                  <span className="text-white font-semibold text-sm">Booster 2</span>
+                  <span className="text-gray-400 text-xs">Offline</span>
+                </div>
+                <div className="bg-green-900/30 border-2 border-green-500 rounded-xl p-4 flex flex-col items-center">
+                  <div className="w-12 h-12 bg-green-500 rounded-full mb-2" />
+                  <span className="text-white font-semibold text-sm">Booster 3</span>
+                  <span className="text-green-400 text-xs">Online</span>
+                </div>
+                <div className="bg-gray-900/30 border-2 border-gray-500 rounded-xl p-4 flex flex-col items-center">
+                  <div className="w-12 h-12 bg-gray-500 rounded-full mb-2" />
+                  <span className="text-white font-semibold text-sm">Booster 4</span>
+                  <span className="text-gray-400 text-xs">Offline</span>
+                </div>
               </div>
             </div>
           </section>
@@ -443,7 +479,7 @@ export default function BoostingPage() {
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-3xl font-bold text-white">Total</h3>
                   <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                    ${totalPrice}$
+                    ${totalPrice}
                   </p>
                 </div>
                 <button
