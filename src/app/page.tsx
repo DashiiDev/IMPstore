@@ -10,6 +10,9 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showAccessMessage, setShowAccessMessage] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [showBoosterLogin, setShowBoosterLogin] = useState(false)
+  const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const [language, setLanguage] = useState("en")
   const router = useRouter()
 
   const games = [
@@ -254,14 +257,79 @@ export default function Home() {
 
       {/* Settings Modal */}
       {showSettingsModal && (
+        <div className="fixed top-20 right-4 z-50 bg-gray-950/90 backdrop-blur-xl rounded-3xl p-6 max-w-sm w-full border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+              Settings
+            </h3>
+            <button
+              onClick={() => setShowSettingsModal(false)}
+              className="text-gray-400 hover:text-white text-2xl transition-colors"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Basic Settings */}
+          <div className="space-y-3 mb-4">
+            <div>
+              <label className="text-white font-semibold mb-1 block text-sm">Language</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-purple-500/30 focus:border-purple-500 focus:outline-none text-sm"
+              >
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+                <option value="es">Español</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="border-t border-purple-500/30 my-4"></div>
+
+          {/* Role Settings */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold text-white">Account Roles</h4>
+            <button
+              onClick={() => {
+                setShowSettingsModal(false)
+                setShowBoosterLogin(true)
+              }}
+              className="w-full flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg transition-all duration-300 font-semibold shadow-lg shadow-green-500/30 border border-green-500/30 text-sm"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Become a Booster
+            </button>
+
+            <button
+              onClick={() => {
+                setShowSettingsModal(false)
+                setShowAdminLogin(true)
+              }}
+              className="w-full flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-lg transition-all duration-300 font-semibold shadow-lg shadow-purple-500/30 border border-purple-500/30 text-sm"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Become Admin
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Booster Login Modal */}
+      {showBoosterLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
-          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-green-500/30 shadow-2xl shadow-green-500/20">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                Settings
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                Booster Login
               </h3>
               <button
-                onClick={() => setShowSettingsModal(false)}
+                onClick={() => setShowBoosterLogin(false)}
                 className="text-gray-400 hover:text-white text-3xl transition-colors"
               >
                 ×
@@ -269,30 +337,78 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
+              <div>
+                <label className="text-white font-semibold mb-2 block">Username</label>
+                <input
+                  type="text"
+                  placeholder="Enter your username"
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-green-500/30 focus:border-green-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-white font-semibold mb-2 block">Password</label>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-green-500/30 focus:border-green-500 focus:outline-none"
+                />
+              </div>
               <button
-                className="w-full flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg shadow-green-500/30 border border-green-500/30"
+                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-green-500/30 border border-green-500/30"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Booster Login
-              </button>
-
-              <button
-                className="w-full flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl transition-all duration-300 font-semibold shadow-lg shadow-purple-500/30 border border-purple-500/30"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Admin Login
+                Login as Booster
               </button>
             </div>
 
             <p className="text-center text-gray-400 text-sm mt-6">
-              Booster login: For boosters to manage their availability
+              Login as a booster to manage your availability
             </p>
-            <p className="text-center text-gray-400 text-sm">
-              Admin login: Only for administrators
+          </div>
+        </div>
+      )}
+
+      {/* Admin Login Modal */}
+      {showAdminLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                Admin Login
+              </h3>
+              <button
+                onClick={() => setShowAdminLogin(false)}
+                className="text-gray-400 hover:text-white text-3xl transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-white font-semibold mb-2 block">Username</label>
+                <input
+                  type="text"
+                  placeholder="Enter admin username"
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-purple-500/30 focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-white font-semibold mb-2 block">Password</label>
+                <input
+                  type="password"
+                  placeholder="Enter admin password"
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-purple-500/30 focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+              <button
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 border border-purple-500/30"
+              >
+                Login as Admin
+              </button>
+            </div>
+
+            <p className="text-center text-gray-400 text-sm mt-6">
+              Admin access is restricted to authorized personnel only
             </p>
           </div>
         </div>
