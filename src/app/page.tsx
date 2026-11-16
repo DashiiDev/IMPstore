@@ -12,8 +12,43 @@ export default function Home() {
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [showBoosterLogin, setShowBoosterLogin] = useState(false)
   const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [showBoosterPanel, setShowBoosterPanel] = useState(false)
   const [language, setLanguage] = useState("en")
+  const [boosterUsername, setBoosterUsername] = useState("")
+  const [boosterPassword, setBoosterPassword] = useState("")
+  const [adminUsername, setAdminUsername] = useState("")
+  const [adminPassword, setAdminPassword] = useState("")
   const router = useRouter()
+
+  // Credentials
+  const boosterCreds = {
+    username: "dash-father-either",
+    password: "wzjowP2i40SMpXvHSJxE0h9/245H1SgxfVxXYS/N2S8="
+  }
+
+  const adminCreds = {
+    username: "nigersaurus-rather-rare-fetch",
+    password: "8+xMyQJbyRn1tHVLi9BUEXoQYqD/ez56WHoW2jMJjMc="
+  }
+
+  const handleBoosterLogin = () => {
+    if (boosterUsername === boosterCreds.username && boosterPassword === boosterCreds.password) {
+      setShowBoosterLogin(false)
+      setShowBoosterPanel(true)
+    } else {
+      alert("Invalid credentials")
+    }
+  }
+
+  const handleAdminLogin = () => {
+    if (adminUsername === adminCreds.username && adminPassword === adminCreds.password) {
+      setShowAdminLogin(false)
+      setShowAdminPanel(true)
+    } else {
+      alert("Invalid credentials")
+    }
+  }
 
   const games = [
     {
@@ -341,6 +376,8 @@ export default function Home() {
                 <label className="text-white font-semibold mb-2 block">Username</label>
                 <input
                   type="text"
+                  value={boosterUsername}
+                  onChange={(e) => setBoosterUsername(e.target.value)}
                   placeholder="Enter your username"
                   className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-green-500/30 focus:border-green-500 focus:outline-none"
                 />
@@ -349,11 +386,14 @@ export default function Home() {
                 <label className="text-white font-semibold mb-2 block">Password</label>
                 <input
                   type="password"
+                  value={boosterPassword}
+                  onChange={(e) => setBoosterPassword(e.target.value)}
                   placeholder="Enter your password"
                   className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-green-500/30 focus:border-green-500 focus:outline-none"
                 />
               </div>
               <button
+                onClick={handleBoosterLogin}
                 className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-green-500/30 border border-green-500/30"
               >
                 Login as Booster
@@ -388,6 +428,8 @@ export default function Home() {
                 <label className="text-white font-semibold mb-2 block">Username</label>
                 <input
                   type="text"
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
                   placeholder="Enter admin username"
                   className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-purple-500/30 focus:border-purple-500 focus:outline-none"
                 />
@@ -396,11 +438,14 @@ export default function Home() {
                 <label className="text-white font-semibold mb-2 block">Password</label>
                 <input
                   type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
                   placeholder="Enter admin password"
                   className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-purple-500/30 focus:border-purple-500 focus:outline-none"
                 />
               </div>
               <button
+                onClick={handleAdminLogin}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 border border-purple-500/30"
               >
                 Login as Admin
@@ -410,6 +455,49 @@ export default function Home() {
             <p className="text-center text-gray-400 text-sm mt-6">
               Admin access is restricted to authorized personnel only
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Booster Panel */}
+      {showBoosterPanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-2xl w-full mx-4 border border-green-500/30 shadow-2xl shadow-green-500/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                Booster Panel
+              </h3>
+              <button onClick={() => setShowBoosterPanel(false)} className="text-gray-400 hover:text-white text-3xl">×</button>
+            </div>
+            <div className="bg-gray-800/50 rounded-xl p-6 mb-4">
+              <p className="text-white font-semibold mb-2">Status: Online</p>
+              <p className="text-gray-400">Manage your availability and orders</p>
+            </div>
+            <button onClick={() => setShowBoosterPanel(false)} className="w-full py-3 bg-green-600 text-white rounded-xl">Go Offline</button>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Panel */}
+      {showAdminPanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-2xl w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                Admin Panel
+              </h3>
+              <button onClick={() => setShowAdminPanel(false)} className="text-gray-400 hover:text-white text-3xl">×</button>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-gray-800/50 rounded-xl p-6">
+                <h4 className="text-white font-semibold mb-2">Pending Booster Applications</h4>
+                <p className="text-gray-400">No pending applications</p>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-6">
+                <h4 className="text-white font-semibold mb-2">Active Boosters</h4>
+                <p className="text-gray-400">2 boosters online</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
