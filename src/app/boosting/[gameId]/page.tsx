@@ -218,6 +218,8 @@ export default function BoostingPage() {
 
     const extrasPrice = selectedExtra ? extraServices[selectedExtra as keyof typeof extraServices] : 0
 
+    console.log("Price calculation:", { currentRank, desiredRank, mode, selectedExtra, basePrice, extrasPrice, total: basePrice + extrasPrice })
+
     return basePrice + extrasPrice
   }
 
