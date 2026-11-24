@@ -223,6 +223,35 @@ export default function BoostingPage() {
 
   const totalPrice = calculatePrice()
 
+  const handlePurchase = async () => {
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: totalPrice,
+          boostingDetails: {
+            serviceName: `${game.name} Boosting`,
+            description: `Boost from ${currentRank} to ${desiredRank} in ${mode} mode${selectedExtra ? ` with ${selectedExtra}` : ""}`,
+            gameId: gameId,
+            currentRank,
+            desiredRank,
+            mode,
+            extraService: selectedExtra,
+          },
+        }),
+      })
+
+      const { sessionId } = await response.json()
+
+      // Redirect to Stripe Checkout using window.location
+      window.location.href = `https://checkout.stripe.com/pay/${sessionId}`
+    } catch (error) {
+      console.error("Purchase error:", error)
+      alert("Failed to initiate checkout")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 relative overflow-hidden">
       {/* Animated background elements */}
@@ -483,7 +512,9 @@ export default function BoostingPage() {
                   </p>
                 </div>
                 <button
-                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 border border-purple-500/30"
+                  onClick={handlePurchase}
+                  disabled={totalPrice === 0}
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 border border-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Purchase Boosting
                 </button>
