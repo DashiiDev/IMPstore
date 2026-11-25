@@ -178,8 +178,8 @@ export default function ChatPage() {
       chat_id: chatId,
       sender: userRole === "customer" ? "customer" : userRole === "booster" ? "booster" : "dev",
       text: newMessage,
-      sender_name: userRole === "dev" ? "Dev" : userRole === "booster" ? "Rosa" : session?.user?.name || "Customer",
-      sender_image: userRole === "dev" || userRole === "booster" ? "/imgs/Imp/pfp impulse.png" : session?.user?.image || "",
+      sender_name: session?.user?.name || (userRole === "booster" ? "Booster" : userRole === "dev" ? "Dev" : "Customer"),
+      sender_image: session?.user?.image || "",
       sender_role: userRole,
     }
 
@@ -241,18 +241,32 @@ export default function ChatPage() {
             </svg>
           </button>
           <div className="flex items-center gap-3">
-            <Image
-              src={getGameIcon(game)}
-              alt="Game"
-              width={32}
-              height={32}
-              className="rounded"
-              unoptimized
-            />
-            <div>
-              <p className="text-white font-semibold text-sm">{getGameName(game)}</p>
-              <p className="text-gray-400 text-xs">Boosting Service</p>
-            </div>
+            {userRole === "booster" || userRole === "dev" ? (
+              <>
+                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {session?.user?.name?.[0] || "B"}
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">{session?.user?.name || "Booster"}</p>
+                  <p className="text-gray-400 text-xs">{getRoleBadge(userRole)}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <Image
+                  src={getGameIcon(game)}
+                  alt="Game"
+                  width={32}
+                  height={32}
+                  className="rounded"
+                  unoptimized
+                />
+                <div>
+                  <p className="text-white font-semibold text-sm">{getGameName(game)}</p>
+                  <p className="text-gray-400 text-xs">Boosting Service</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
