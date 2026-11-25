@@ -12,6 +12,7 @@ export default function Home() {
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [showBoosterLogin, setShowBoosterLogin] = useState(false)
   const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const [showDevLogin, setShowDevLogin] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showBoosterPanel, setShowBoosterPanel] = useState(false)
   const [showChatList, setShowChatList] = useState(false)
@@ -20,14 +21,21 @@ export default function Home() {
   const [boosterPassword, setBoosterPassword] = useState("")
   const [adminUsername, setAdminUsername] = useState("")
   const [adminPassword, setAdminPassword] = useState("")
+  const [devUsername, setDevUsername] = useState("")
+  const [devPassword, setDevPassword] = useState("")
   const [isBooster, setIsBooster] = useState(false)
+  const [isDev, setIsDev] = useState(false)
   const router = useRouter()
 
-  // Check if user is already a booster on mount
+  // Check if user is already a booster or dev on mount
   useEffect(() => {
     const boosterStatus = localStorage.getItem("isBooster")
+    const devStatus = localStorage.getItem("isDev")
     if (boosterStatus === "true") {
       setIsBooster(true)
+    }
+    if (devStatus === "true") {
+      setIsDev(true)
     }
   }, [])
 
@@ -49,8 +57,7 @@ export default function Home() {
       localStorage.setItem("boosterRole", "true")
       setIsBooster(true)
       setShowBoosterLogin(false)
-      setShowBoosterPanel(true)
-      alert("You are now a booster! This status is permanent.")
+      router.push("/booster")
     } else {
       alert("Invalid credentials")
     }
@@ -58,8 +65,10 @@ export default function Home() {
 
   const handleAdminLogin = () => {
     if (adminUsername === adminCreds.username && adminPassword === adminCreds.password) {
+      localStorage.setItem("isDev", "true")
+      setIsDev(true)
       setShowAdminLogin(false)
-      setShowAdminPanel(true)
+      router.push("/dev")
     } else {
       alert("Invalid credentials")
     }
@@ -140,19 +149,25 @@ export default function Home() {
               
               {/* Booster indicator - only shows if user is a booster */}
               {isBooster && (
-                <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 rounded-full border border-purple-400/50 shadow-lg shadow-purple-500/30">
+                <div className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-700 px-4 py-2 rounded-full border border-red-400/50 shadow-lg shadow-red-500/30">
                   <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 font-bold">
-                    Rosa
-                  </span>
+                  <span className="text-white font-bold">BOOSTER</span>
+                </div>
+              )}
+
+              {/* Dev indicator - only shows if user is a dev */}
+              {isDev && (
+                <div className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 px-4 py-2 rounded-full border border-pink-400/50 shadow-lg shadow-pink-500/30">
+                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-white font-bold">DEV</span>
                 </div>
               )}
 
               {/* Chat list button for boosters */}
               {isBooster && (
                 <button
-                  onClick={() => setShowChatList(true)}
-                  className="p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-full border border-purple-500/30 transition-all relative"
+                  onClick={() => router.push("/booster")}
+                  className="p-2 bg-red-800/50 hover:bg-red-700/50 rounded-full border border-red-500/30 transition-all relative"
                 >
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -162,6 +177,29 @@ export default function Home() {
                   </span>
                 </button>
               )}
+
+              {/* Dev panel button */}
+              {isDev && (
+                <button
+                  onClick={() => router.push("/dev")}
+                  className="p-2 bg-pink-800/50 hover:bg-pink-700/50 rounded-full border border-pink-500/30 transition-all"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              )}
+
+              {/* Profile button for all users */}
+              <button
+                onClick={() => router.push("/profile")}
+                className="p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-full border border-purple-500/30 transition-all"
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
 
               <button
                 onClick={() => setShowSettingsModal(true)}
@@ -448,7 +486,57 @@ export default function Home() {
         </div>
       )}
 
-      {/* Admin Login Modal */}
+      {/* Dev Login Modal */}
+      {showDevLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-pink-500/30 shadow-2xl shadow-pink-500/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
+                Dev Login
+              </h3>
+              <button
+                onClick={() => setShowDevLogin(false)}
+                className="text-gray-400 hover:text-white text-3xl transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-white font-semibold mb-2 block">Username</label>
+                <input
+                  type="text"
+                  value={devUsername}
+                  onChange={(e) => setDevUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-pink-500/30 focus:border-pink-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-white font-semibold mb-2 block">Password</label>
+                <input
+                  type="password"
+                  value={devPassword}
+                  onChange={(e) => setDevPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-pink-500/30 focus:border-pink-500 focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={handleAdminLogin}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30 border border-purple-500/30"
+              >
+                Login as Admin
+              </button>
+            </div>
+
+            <p className="text-center text-gray-400 text-sm mt-6">
+              Login as a developer to access full control
+            </p>
+          </div>
+        </div>
+      )}
       {showAdminLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
           <div className="bg-gray-950/90 rounded-3xl p-8 max-w-md w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
@@ -496,166 +584,6 @@ export default function Home() {
             <p className="text-center text-gray-400 text-sm mt-6">
               Admin access is restricted to authorized personnel only
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* Booster Panel */}
-      {showBoosterPanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
-          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-2xl w-full mx-4 border border-green-500/30 shadow-2xl shadow-green-500/20">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-                Booster Panel
-              </h3>
-              <button onClick={() => setShowBoosterPanel(false)} className="text-gray-400 hover:text-white text-3xl">×</button>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl p-6 border border-green-500/30">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-white font-semibold">Status</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-green-400 font-semibold">Online</span>
-                  </div>
-                </div>
-                <p className="text-gray-400 text-sm">You are currently accepting orders</p>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-6">
-                <h4 className="text-white font-semibold mb-2">Active Orders</h4>
-                <p className="text-gray-400 text-sm">3 orders in progress</p>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-6">
-                <h4 className="text-white font-semibold mb-2">Total Earnings</h4>
-                <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">$127.50</p>
-              </div>
-              <button 
-                onClick={() => router.push("/")}
-                className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold transition-all"
-              >
-                View All Chats
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Admin Panel */}
-      {showAdminPanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
-          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-3xl w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                Admin Panel
-              </h3>
-              <button onClick={() => setShowAdminPanel(false)} className="text-gray-400 hover:text-white text-3xl">×</button>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30">
-                <h4 className="text-white font-semibold mb-4">Dashboard Overview</h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                    <p className="text-3xl font-bold text-purple-400">12</p>
-                    <p className="text-gray-400 text-sm">Active Orders</p>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                    <p className="text-3xl font-bold text-pink-400">5</p>
-                    <p className="text-gray-400 text-sm">Boosters Online</p>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                    <p className="text-3xl font-bold text-green-400">$1,250</p>
-                    <p className="text-gray-400 text-sm">Revenue</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-6">
-                <h4 className="text-white font-semibold mb-2">Pending Booster Applications</h4>
-                <p className="text-gray-400 text-sm">No pending applications</p>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-6">
-                <h4 className="text-white font-semibold mb-2">Active Boosters</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-green-500 rounded-full" />
-                      <span className="text-white">Rosa</span>
-                    </div>
-                    <span className="text-green-400 text-sm">Online</span>
-                  </div>
-                  <div className="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-green-500 rounded-full" />
-                      <span className="text-white">Booster2</span>
-                    </div>
-                    <span className="text-green-400 text-sm">Online</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Chat List Modal for Boosters */}
-      {showChatList && (
-        <div className="fixed top-20 right-4 z-50 bg-gray-950/90 backdrop-blur-xl rounded-3xl p-6 max-w-md w-full border border-purple-500/30 shadow-2xl shadow-purple-500/20">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-              Your Chats
-            </h3>
-            <button
-              onClick={() => setShowChatList(false)}
-              className="text-gray-400 hover:text-white text-2xl transition-colors"
-            >
-              ×
-            </button>
-          </div>
-          <div className="space-y-3">
-            <div 
-              onClick={() => { setShowChatList(false); router.push("/chat/chat-session-1") }}
-              className="bg-gray-800/50 hover:bg-gray-700/50 rounded-xl p-4 cursor-pointer transition-all border border-purple-500/20 hover:border-purple-500/50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                  C
-                </div>
-                <div className="flex-1">
-                  <p className="text-white font-semibold">Customer 1</p>
-                  <p className="text-gray-400 text-sm">RLSS: Bronze to Champion</p>
-                </div>
-                <div className="w-3 h-3 bg-green-400 rounded-full" />
-              </div>
-            </div>
-            <div 
-              onClick={() => { setShowChatList(false); router.push("/chat/chat-session-2") }}
-              className="bg-gray-800/50 hover:bg-gray-700/50 rounded-xl p-4 cursor-pointer transition-all border border-purple-500/20 hover:border-purple-500/50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                  C
-                </div>
-                <div className="flex-1">
-                  <p className="text-white font-semibold">Customer 2</p>
-                  <p className="text-gray-400 text-sm">RL: Silver to Diamond</p>
-                </div>
-                <div className="w-3 h-3 bg-gray-400 rounded-full" />
-              </div>
-            </div>
-            <div 
-              onClick={() => { setShowChatList(false); router.push("/chat/chat-session-3") }}
-              className="bg-gray-800/50 hover:bg-gray-700/50 rounded-xl p-4 cursor-pointer transition-all border border-purple-500/20 hover:border-purple-500/50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                  C
-                </div>
-                <div className="flex-1">
-                  <p className="text-white font-semibold">Customer 3</p>
-                  <p className="text-gray-400 text-sm">RLSS: Gold to GC</p>
-                </div>
-                <div className="w-3 h-3 bg-green-400 rounded-full" />
-              </div>
-            </div>
           </div>
         </div>
       )}

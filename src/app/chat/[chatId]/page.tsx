@@ -7,11 +7,12 @@ import Image from "next/image"
 
 interface Message {
   id: string
-  sender: "customer" | "booster"
+  sender: "customer" | "booster" | "dev"
   text: string
   timestamp: Date
   senderName?: string
   senderImage?: string
+  senderRole?: "dev" | "booster" | "customer"
 }
 
 export default function ChatPage() {
@@ -28,10 +29,11 @@ export default function ChatPage() {
       timestamp: new Date(),
       senderName: "Rosa",
       senderImage: "/imgs/Imp/pfp impulse.png",
+      senderRole: "booster",
     },
   ])
   const [newMessage, setNewMessage] = useState("")
-  const [isBooster, setIsBooster] = useState(false)
+  const [userRole, setUserRole] = useState<"dev" | "booster" | "customer">("customer")
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -45,9 +47,13 @@ export default function ChatPage() {
   }, [messages])
 
   useEffect(() => {
-    // Check if user is a booster
-    const boosterRole = localStorage.getItem("isBooster")
-    setIsBooster(boosterRole === "true")
+    // Check user role
+    const isDev = localStorage.getItem("isDev") === "true"
+    const isBooster = localStorage.getItem("isBooster") === "true"
+    
+    if (isDev) setUserRole("dev")
+    else if (isBooster) setUserRole("booster")
+    else setUserRole("customer")
   }, [])
 
   const handleSendMessage = () => {
@@ -55,162 +61,191 @@ export default function ChatPage() {
 
     const message: Message = {
       id: Date.now().toString(),
-      sender: isBooster ? "booster" : "customer",
+      sender: userRole === "customer" ? "customer" : userRole === "booster" ? "booster" : "dev",
       text: newMessage,
       timestamp: new Date(),
-      senderName: isBooster ? "Rosa" : session?.user?.name || "Customer",
-      senderImage: isBooster ? "/imgs/Imp/pfp impulse.png" : session?.user?.image || "",
+      senderName: userRole === "dev" ? "Dev" : userRole === "booster" ? "Rosa" : session?.user?.name || "Customer",
+      senderImage: userRole === "dev" || userRole === "booster" ? "/imgs/Imp/pfp impulse.png" : session?.user?.image || "",
+      senderRole: userRole,
     }
 
     setMessages([...messages, message])
     setNewMessage("")
   }
 
+  const getRoleGradient = (role: string) => {
+    if (role === "dev") return "bg-gradient-to-r from-pink-500 to-purple-600"
+    if (role === "booster") return "bg-gradient-to-r from-red-500 to-red-700"
+    return "bg-purple-600"
+  }
+
+  const getRoleBadge = (role: string) => {
+    if (role === "dev") return "DEV"
+    if (role === "booster") return "BOOSTER"
+    return ""
+  }
+
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        </div>
-        <div className="relative z-10 text-white text-2xl font-semibold">Loading...</div>
+      <div className="min-h-screen bg-[#313338] flex items-center justify-center">
+        <div className="text-white text-2xl font-semibold">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+    <div className="min-h-screen bg-[#313338] flex">
+      {/* Sidebar - Chat List */}
+      <div className="w-72 bg-[#2b2d31] flex flex-col border-r border-[#1f2023]">
+        <div className="p-4 border-b border-[#1f2023]">
+          <h2 className="text-white font-semibold text-lg">Direct Messages</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {/* Active Chat */}
+          <div className="bg-[#404249] rounded-lg p-3 cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10">
+                <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                  C
+                </div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#2b2d31]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold truncate">Customer Support</p>
+                <p className="text-gray-400 text-sm truncate">Boosting chat</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Other Chats */}
+          <div className="hover:bg-[#404249] rounded-lg p-3 cursor-pointer transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10">
+                <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold">
+                  S
+                </div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-[#2b2d31]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-300 font-semibold truncate">Staff Chat</p>
+                <p className="text-gray-500 text-sm truncate">Internal communications</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-xl border-b border-purple-500/30 shadow-2xl shadow-purple-500/10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col bg-[#313338]">
+        {/* Chat Header */}
+        <div className="h-12 bg-[#313338] border-b border-[#1f2023] px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push("/")}
-              className="text-white hover:text-purple-400 transition-colors"
-            >
-              ← Back to Home
-            </button>
-            <h1 className="text-xl font-bold text-white">
-              Chat with {isBooster ? "Customer" : "Booster"}
-            </h1>
+            <div className="relative w-8 h-8">
+              <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                C
+              </div>
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#313338]" />
+            </div>
+            <div>
+              <p className="text-white font-semibold">Customer Support</p>
+              <p className="text-gray-400 text-xs">Boosting Service</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 bg-purple-500 rounded-full blur-md animate-pulse" />
-              {session?.user?.image ? (
-                <div className="relative w-10 h-10">
+          <div className="flex items-center gap-2">
+            <button className="p-2 hover:bg-[#404249] rounded-lg transition-colors">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </button>
+            <button className="p-2 hover:bg-[#404249] rounded-lg transition-colors">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <div key={message.id} className="flex items-start gap-4 hover:bg-[#2e3035] p-2 rounded-lg transition-colors">
+              <div className="relative w-10 h-10 flex-shrink-0">
+                {message.senderImage ? (
                   <Image
-                    src={session.user.image}
-                    alt={session.user.name || "User"}
+                    src={message.senderImage}
+                    alt={message.senderName || "User"}
                     fill
-                    className="rounded-full border-2 border-purple-500 object-cover"
+                    className="rounded-full object-cover"
                     unoptimized
                   />
-                </div>
-              ) : (
-                <div className="relative w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-purple-500">
-                  {session?.user?.name?.[0] || "U"}
-                </div>
-              )}
-            </div>
-            <span className="text-white font-semibold">{session?.user?.name || "User"}</span>
-          </div>
-        </div>
-      </header>
-
-      {/* Chat Container */}
-      <div className="relative z-10 pt-20 pb-32 px-4">
-        <div className="container mx-auto max-w-4xl">
-          {/* Messages */}
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === (isBooster ? "booster" : "customer") ? "justify-end" : "justify-start"}`}
-              >
-                <div className="flex items-end gap-3 max-w-[70%]">
-                  {message.sender !== (isBooster ? "booster" : "customer") && (
-                    <div className="relative w-10 h-10 flex-shrink-0">
-                      {message.senderImage ? (
-                        <Image
-                          src={message.senderImage}
-                          alt={message.senderName || "User"}
-                          fill
-                          className="rounded-full border-2 border-purple-500 object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-purple-500">
-                          {message.senderName?.[0] || "U"}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div
-                    className={`rounded-2xl p-4 ${
-                      message.sender === (isBooster ? "booster" : "customer")
-                        ? "bg-purple-600 text-white"
-                        : "bg-gray-800 text-white"
-                    }`}
-                  >
-                    <p className="text-sm mb-1 font-semibold">
-                      {message.senderName || (message.sender === "booster" ? "Booster" : "Customer")}
-                    </p>
-                    <p>{message.text}</p>
-                    <p className="text-xs mt-2 opacity-70">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </p>
+                ) : (
+                  <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                    {message.senderName?.[0] || "U"}
                   </div>
-                  {message.sender === (isBooster ? "booster" : "customer") && (
-                    <div className="relative w-10 h-10 flex-shrink-0">
-                      {message.senderImage ? (
-                        <Image
-                          src={message.senderImage}
-                          alt={message.senderName || "User"}
-                          fill
-                          className="rounded-full border-2 border-purple-500 object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-purple-500">
-                          {message.senderName?.[0] || "U"}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                )}
+                {message.senderRole === "booster" && (
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-r from-red-500 to-red-700 rounded-full border-2 border-[#313338] flex items-center justify-center">
+                    <span className="text-white text-xs">⚡</span>
+                  </div>
+                )}
+                {message.senderRole === "dev" && (
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full border-2 border-[#313338] flex items-center justify-center">
+                    <span className="text-white text-xs">👑</span>
+                  </div>
+                )}
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className={`font-semibold ${getRoleGradient(message.senderRole || "customer")} bg-clip-text text-transparent`}>
+                    {message.senderName || (message.sender === "booster" ? "Booster" : message.sender === "dev" ? "Dev" : "Customer")}
+                  </span>
+                  {getRoleBadge(message.senderRole || "") && (
+                    <span className={`px-2 py-0.5 text-xs font-bold text-white rounded-md ${getRoleGradient(message.senderRole || "")}`}>
+                      {getRoleBadge(message.senderRole || "")}
+                    </span>
+                  )}
+                  <span className="text-gray-500 text-xs">
+                    {new Date(message.timestamp).toLocaleDateString()} at {new Date(message.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+                <p className="text-gray-200 mt-1">{message.text}</p>
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
         </div>
-      </div>
 
-      {/* Message Input */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-xl border-t border-purple-500/30 p-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="flex gap-3">
+        {/* Message Input */}
+        <div className="p-4 bg-[#313338]">
+          <div className="bg-[#383a40] rounded-lg flex items-center px-4">
+            <button className="p-2 hover:bg-[#404249] rounded-lg transition-colors">
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Type your message..."
-              className="flex-1 bg-gray-800 text-white rounded-xl px-4 py-3 border border-purple-500/30 focus:border-purple-500 focus:outline-none"
+              placeholder="Message #boosting"
+              className="flex-1 bg-transparent text-white px-4 py-3 focus:outline-none"
             />
-            <button
-              onClick={handleSendMessage}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-purple-500/30"
-            >
-              Send
-            </button>
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-[#404249] rounded-lg transition-colors">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              <button
+                onClick={handleSendMessage}
+                className="p-2 hover:bg-[#404249] rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
