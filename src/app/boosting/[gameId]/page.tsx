@@ -23,6 +23,8 @@ const prices = {
     Platinum: 14,
     Diamond: 12,
     Champion: 7,
+    GC: 15,
+    SSL: 20,
   },
   "2v2": {
     Bronze: 16,
@@ -31,6 +33,8 @@ const prices = {
     Platinum: 10,
     Diamond: 8,
     Champion: 6,
+    GC: 12,
+    SSL: 15,
   },
   "Hoops": {
     Bronze: 14,
@@ -39,6 +43,8 @@ const prices = {
     Platinum: 8,
     Diamond: 6,
     Champion: 4,
+    GC: 10,
+    SSL: 12,
   },
 }
 
@@ -200,7 +206,7 @@ export default function BoostingPage() {
   const calculatePrice = () => {
     if (!currentRank || !desiredRank) return 0
 
-    const rankOrder = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Champion"]
+    const rankOrder = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Champion", "GC", "SSL"]
     
     // Extract base rank name (Bronze, Silver, etc.)
     const currentBaseRank = currentRank.split(" ")[0]
