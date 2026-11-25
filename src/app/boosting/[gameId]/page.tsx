@@ -226,6 +226,8 @@ export default function BoostingPage() {
   const totalPrice = calculatePrice()
 
   const handlePurchase = async () => {
+    console.log("Purchase clicked:", { totalPrice, currentRank, desiredRank, mode, selectedExtra })
+    
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -244,7 +246,16 @@ export default function BoostingPage() {
         }),
       })
 
-      const { sessionId } = await response.json()
+      const data = await response.json()
+      console.log("Checkout response:", data)
+
+      if (!response.ok) {
+        console.error("Checkout error:", data)
+        alert(data.error || "Failed to create checkout session")
+        return
+      }
+
+      const { sessionId } = data
 
       // Redirect to Stripe Checkout using window.location
       window.location.href = `https://checkout.stripe.com/pay/${sessionId}`
@@ -510,9 +521,14 @@ export default function BoostingPage() {
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-3xl font-bold text-white">Total</h3>
                   <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                    ${totalPrice}
+                    ${totalPrice || 0}
                   </p>
                 </div>
+                {totalPrice === 0 && (
+                  <p className="text-yellow-400 text-sm mb-4">
+                    Please select current rank, desired rank, and mode to see the price
+                  </p>
+                )}
                 <button
                   onClick={handlePurchase}
                   disabled={totalPrice === 0}
