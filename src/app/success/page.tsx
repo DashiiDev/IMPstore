@@ -16,10 +16,13 @@ function SuccessContent() {
       setSessionId(sessionIdParam)
       setStatus("success")
       
-      // Generate a unique chat ID and redirect to chat with game parameter
-      const chatId = `chat-${sessionIdParam}`
+      // Generate a unique order ID and save to localStorage
+      const orderId = `order-${sessionIdParam}`
+      localStorage.setItem("lastOrderId", orderId)
+      localStorage.setItem("lastOrderGame", gameParam)
+      
       setTimeout(() => {
-        router.push(`/chat/${chatId}?game=${gameParam}`)
+        router.push(`/boosting-status/${orderId}?game=${gameParam}`)
       }, 2000)
     } else {
       setStatus("error")
