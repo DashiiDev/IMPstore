@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXTAUTH_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXTAUTH_URL}/success?session_id={CHECKOUT_SESSION_ID}&game=${boostingDetails.gameId}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/boosting/${boostingDetails.gameId}`,
       metadata: {
         gameId: boostingDetails.gameId,

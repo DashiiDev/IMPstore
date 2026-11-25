@@ -11,14 +11,15 @@ function SuccessContent() {
 
   useEffect(() => {
     const sessionIdParam = searchParams.get("session_id")
+    const gameParam = searchParams.get("game") || "rocket-league"
     if (sessionIdParam) {
       setSessionId(sessionIdParam)
       setStatus("success")
       
-      // Generate a unique chat ID and redirect to chat
+      // Generate a unique chat ID and redirect to chat with game parameter
       const chatId = `chat-${sessionIdParam}`
       setTimeout(() => {
-        router.push(`/chat/${chatId}`)
+        router.push(`/chat/${chatId}?game=${gameParam}`)
       }, 2000)
     } else {
       setStatus("error")

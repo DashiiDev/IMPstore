@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter, useParams, useSearchParams } from "next/navigation"
 import Image from "next/image"
 
 interface Message {
@@ -20,11 +20,14 @@ export default function ChatPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const chatId = params.chatId as string
+  const game = searchParams.get("game") || "rocket-league"
 
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [userRole, setUserRole] = useState<"dev" | "booster" | "customer">("customer")
+  const [unreadCount, setUnreadCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,6 +50,40 @@ export default function ChatPage() {
     else setUserRole("customer")
   }, [])
 
+  useEffect(() => {
+    // Request notification permission
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission()
+    }
+  }, [])
+
+  useEffect(() => {
+    // Simulate receiving messages (in real app, this would be from WebSocket/Server-Sent Events)
+    const interval = setInterval(() => {
+      const storedMessages = localStorage.getItem(`chat_${chatId}`)
+      if (storedMessages) {
+        const parsed = JSON.parse(storedMessages)
+        if (parsed.length > messages.length) {
+          // New message received
+          const newMsg = parsed[parsed.length - 1]
+          if (newMsg.sender !== userRole) {
+            setUnreadCount(prev => prev + 1)
+            // Show browser notification
+            if ("Notification" in window && Notification.permission === "granted") {
+              new Notification("New Message", {
+                body: `${newMsg.senderName}: ${newMsg.text}`,
+                icon: "/imgs/Imp/pfp impulse.png"
+              })
+            }
+          }
+          setMessages(parsed)
+        }
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [chatId, messages.length, userRole])
+
   const handleSendMessage = () => {
     if (!newMessage.trim()) return
 
@@ -58,10 +95,12 @@ export default function ChatPage() {
       senderName: userRole === "dev" ? "Dev" : userRole === "booster" ? "Rosa" : session?.user?.name || "Customer",
       senderImage: userRole === "dev" || userRole === "booster" ? "/imgs/Imp/pfp impulse.png" : session?.user?.image || "",
       senderRole: userRole,
-      game: chatId.includes("rocket-league-sideswipe") ? "rocket-league-sideswipe" : "rocket-league",
+      game: game,
     }
 
-    setMessages([...messages, message])
+    const updatedMessages = [...messages, message]
+    setMessages(updatedMessages)
+    localStorage.setItem(`chat_${chatId}`, JSON.stringify(updatedMessages))
     setNewMessage("")
   }
 
@@ -78,9 +117,15 @@ export default function ChatPage() {
   }
 
   const getGameIcon = (game: string) => {
-    if (game === "rocket-league") return "/imgs/KE6nXem.png"
     if (game === "rocket-league-sideswipe") return "/imgs/RL_Sideswipe_Coverart.png"
+    if (game === "rocket-league") return "/imgs/KE6nXem.png"
     return "/imgs/Imp/pfp impulse.png"
+  }
+
+  const getGameName = (game: string) => {
+    if (game === "rocket-league-sideswipe") return "Rocket League Sideswipe"
+    if (game === "rocket-league") return "Rocket League"
+    return "Game"
   }
 
   if (status === "loading") {
@@ -92,175 +137,124 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
-      {/* Sidebar - Clean design inspired by EL DORADO */}
-      <div className="w-80 bg-[#111111] flex flex-col border-r border-[#222222]">
-        <div className="p-6 border-b border-[#222222]">
-          <h2 className="text-white font-bold text-xl">Messages</h2>
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+      {/* Chat Header - Simplified */}
+      <div className="h-14 bg-[#111111] border-b border-[#222222] px-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/")}
+            className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-3">
+            <Image
+              src={getGameIcon(game)}
+              alt="Game"
+              width={32}
+              height={32}
+              className="rounded"
+              unoptimized
+            />
+            <div>
+              <p className="text-white font-semibold text-sm">{getGameName(game)}</p>
+              <p className="text-gray-400 text-xs">Boosting Service</p>
+            </div>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-3">
-          {/* Empty state - no fake chats */}
-          <div className="text-center py-12">
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              {unreadCount}
+            </span>
+          )}
+          {userRole !== "customer" && (
+            <span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${getRoleGradient(userRole)}`}>
+              {getRoleBadge(userRole)}
+            </span>
+          )}
+          <div className="relative">
+            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              {session?.user?.name?.[0] || "U"}
+            </div>
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#111111]" />
+          </div>
+        </div>
+      </div>
+
+      {/* Messages - Simplified */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {messages.length === 0 ? (
+          <div className="text-center py-20">
             <div className="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-gray-500 text-sm">No active conversations</p>
-            <p className="text-gray-600 text-xs mt-2">Chat will appear after purchase</p>
+            <p className="text-gray-500">Start the conversation</p>
+            <p className="text-gray-600 text-sm mt-1">Send a message to begin</p>
           </div>
-        </div>
+        ) : (
+          messages.map((message) => (
+            <div key={message.id} className={`flex items-start gap-2 p-2 rounded-lg transition-colors ${message.sender === userRole ? "bg-[#1a1a1a]" : "hover:bg-[#111111]"}`}>
+              <div className="relative w-8 h-8 flex-shrink-0">
+                {message.senderImage ? (
+                  <Image
+                    src={message.senderImage}
+                    alt={message.senderName || "User"}
+                    fill
+                    className="rounded-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {message.senderName?.[0] || "U"}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className={`font-semibold text-xs ${getRoleGradient(message.senderRole || "customer")} bg-clip-text text-transparent`}>
+                    {message.senderName || (message.sender === "booster" ? "Booster" : message.sender === "dev" ? "Dev" : "Customer")}
+                  </span>
+                  {getRoleBadge(message.senderRole || "") && (
+                    <span className={`px-1.5 py-0.5 text-[10px] font-bold text-white rounded ${getRoleGradient(message.senderRole || "")}`}>
+                      {getRoleBadge(message.senderRole || "")}
+                    </span>
+                  )}
+                  <span className="text-gray-500 text-[10px] ml-auto">
+                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <p className="text-gray-200 text-sm">{message.text}</p>
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Main Chat Area - EL DORADO inspired design */}
-      <div className="flex-1 flex flex-col bg-[#0a0a0a]">
-        {/* Chat Header */}
-        <div className="h-16 bg-[#111111] border-b border-[#222222] px-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative w-12 h-12">
-              <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                {session?.user?.name?.[0] || "U"}
-              </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#111111]" />
-            </div>
-            <div>
-              <p className="text-white font-semibold text-lg">{session?.user?.name || "User"}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Image
-                  src={getGameIcon(chatId.includes("rocket-league-sideswipe") ? "rocket-league-sideswipe" : "rocket-league")}
-                  alt="Game"
-                  width={20}
-                  height={20}
-                  className="rounded"
-                  unoptimized
-                />
-                <p className="text-gray-400 text-xs">
-                  {chatId.includes("rocket-league-sideswipe") ? "Rocket League Sideswipe" : "Rocket League"}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {userRole !== "customer" && (
-              <span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${getRoleGradient(userRole)}`}>
-                {getRoleBadge(userRole)}
-              </span>
-            )}
-            <button
-              onClick={() => router.push("/")}
-              className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </div>
-              <p className="text-gray-500 text-lg">Start the conversation</p>
-              <p className="text-gray-600 text-sm mt-2">Send a message to begin</p>
-            </div>
-          ) : (
-            messages.map((message) => (
-              <div key={message.id} className="flex items-start gap-4 hover:bg-[#111111] p-4 rounded-xl transition-colors">
-                <div className="relative w-12 h-12 flex-shrink-0">
-                  {message.senderImage ? (
-                    <Image
-                      src={message.senderImage}
-                      alt={message.senderName || "User"}
-                      fill
-                      className="rounded-full object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {message.senderName?.[0] || "U"}
-                    </div>
-                  )}
-                  {message.senderRole === "booster" && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-r from-red-500 to-red-700 rounded-full border-2 border-[#0a0a0a] flex items-center justify-center">
-                      <span className="text-white text-xs">⚡</span>
-                    </div>
-                  )}
-                  {message.senderRole === "dev" && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full border-2 border-[#0a0a0a] flex items-center justify-center">
-                      <span className="text-white text-xs">👑</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`font-semibold ${getRoleGradient(message.senderRole || "customer")} bg-clip-text text-transparent`}>
-                      {message.senderName || (message.sender === "booster" ? "Booster" : message.sender === "dev" ? "Dev" : "Customer")}
-                    </span>
-                    {getRoleBadge(message.senderRole || "") && (
-                      <span className={`px-2 py-0.5 text-xs font-bold text-white rounded-md ${getRoleGradient(message.senderRole || "")}`}>
-                        {getRoleBadge(message.senderRole || "")}
-                      </span>
-                    )}
-                    {message.game && (
-                      <Image
-                        src={getGameIcon(message.game)}
-                        alt="Game"
-                        width={16}
-                        height={16}
-                        className="rounded"
-                        unoptimized
-                      />
-                    )}
-                    <span className="text-gray-500 text-xs ml-auto">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <p className="text-gray-200">{message.text}</p>
-                </div>
-              </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Message Input */}
-        <div className="p-6 bg-[#111111] border-t border-[#222222]">
-          <div className="bg-[#1a1a1a] rounded-xl flex items-center px-4">
-            <button className="p-2 hover:bg-[#222222] rounded-lg transition-colors">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Type a message..."
-              className="flex-1 bg-transparent text-white px-4 py-3 focus:outline-none"
-            />
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-[#222222] rounded-lg transition-colors">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-              <button
-                onClick={handleSendMessage}
-                className="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
-              >
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
-            </div>
-          </div>
+      {/* Message Input - Simplified */}
+      <div className="p-3 bg-[#111111] border-t border-[#222222]">
+        <div className="bg-[#1a1a1a] rounded-lg flex items-center px-3">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            placeholder="Type a message..."
+            className="flex-1 bg-transparent text-white px-2 py-2 focus:outline-none text-sm"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
