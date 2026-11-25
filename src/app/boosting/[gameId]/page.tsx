@@ -212,27 +212,14 @@ export default function BoostingPage() {
     const currentBaseRank = currentRank.split(" ")[0]
     const desiredBaseRank = desiredRank.split(" ")[0]
 
-    console.log("Price calculation debug:", { 
-      currentRank, 
-      desiredRank, 
-      currentBaseRank, 
-      desiredBaseRank,
-      mode, 
-      selectedExtra 
-    })
-
     const currentIndex = rankOrder.indexOf(currentBaseRank)
     const desiredIndex = rankOrder.indexOf(desiredBaseRank)
 
-    console.log("Indices:", { currentIndex, desiredIndex })
-
     if (currentIndex === -1 || desiredIndex === -1) {
-      console.error("Invalid rank name found")
       return 0
     }
 
     if (currentIndex >= desiredIndex) {
-      console.log("Current rank is same or higher than desired rank")
       return 0
     }
 
@@ -241,13 +228,10 @@ export default function BoostingPage() {
       const modePrices = prices[mode as keyof typeof prices]
       const rankName = rankOrder[i]
       const rankPrice = modePrices[rankName as keyof typeof modePrices]
-      console.log(`Adding price for ${rankName} in ${mode}: ${rankPrice}`)
       basePrice += rankPrice
     }
 
     const extrasPrice = selectedExtra ? extraServices[selectedExtra as keyof typeof extraServices] : 0
-
-    console.log("Final price:", { basePrice, extrasPrice, total: basePrice + extrasPrice })
 
     return basePrice + extrasPrice
   }
@@ -255,8 +239,6 @@ export default function BoostingPage() {
   const totalPrice = calculatePrice()
 
   const handlePurchase = async () => {
-    console.log("Purchase clicked:", { totalPrice, currentRank, desiredRank, mode, selectedExtra })
-    
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -276,10 +258,8 @@ export default function BoostingPage() {
       })
 
       const data = await response.json()
-      console.log("Checkout response:", data)
 
       if (!response.ok) {
-        console.error("Checkout error:", data)
         alert(data.error || "Failed to create checkout session")
         return
       }
@@ -291,11 +271,9 @@ export default function BoostingPage() {
       const { error } = await stripe.redirectToCheckout({ sessionId })
       
       if (error) {
-        console.error("Stripe redirect error:", error)
         alert(error.message || "Failed to redirect to checkout")
       }
     } catch (error) {
-      console.error("Purchase error:", error)
       alert("Failed to initiate checkout")
     }
   }
@@ -514,37 +492,6 @@ export default function BoostingPage() {
                       <span className="text-purple-300 font-bold text-lg">${price}$</span>
                     </div>
                   ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Available Boosters */}
-          <section className="py-8 px-4 relative">
-            <div className="container mx-auto relative z-10 max-w-3xl">
-              <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-8">
-                Available Boosters
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-green-900/30 border-2 border-green-500 rounded-xl p-4 flex flex-col items-center">
-                  <div className="w-12 h-12 bg-green-500 rounded-full mb-2" />
-                  <span className="text-white font-semibold text-sm">Booster 1</span>
-                  <span className="text-green-400 text-xs">Online</span>
-                </div>
-                <div className="bg-gray-900/30 border-2 border-gray-500 rounded-xl p-4 flex flex-col items-center">
-                  <div className="w-12 h-12 bg-gray-500 rounded-full mb-2" />
-                  <span className="text-white font-semibold text-sm">Booster 2</span>
-                  <span className="text-gray-400 text-xs">Offline</span>
-                </div>
-                <div className="bg-green-900/30 border-2 border-green-500 rounded-xl p-4 flex flex-col items-center">
-                  <div className="w-12 h-12 bg-green-500 rounded-full mb-2" />
-                  <span className="text-white font-semibold text-sm">Booster 3</span>
-                  <span className="text-green-400 text-xs">Online</span>
-                </div>
-                <div className="bg-gray-900/30 border-2 border-gray-500 rounded-xl p-4 flex flex-col items-center">
-                  <div className="w-12 h-12 bg-gray-500 rounded-full mb-2" />
-                  <span className="text-white font-semibold text-sm">Booster 4</span>
-                  <span className="text-gray-400 text-xs">Offline</span>
-                </div>
               </div>
             </div>
           </section>

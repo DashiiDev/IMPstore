@@ -14,10 +14,16 @@ function SuccessContent() {
     if (sessionIdParam) {
       setSessionId(sessionIdParam)
       setStatus("success")
+      
+      // Generate a unique chat ID and redirect to chat
+      const chatId = `chat-${sessionIdParam}`
+      setTimeout(() => {
+        router.push(`/chat/${chatId}`)
+      }, 2000)
     } else {
       setStatus("error")
     }
-  }, [searchParams])
+  }, [searchParams, router])
 
   if (status === "loading") {
     return (
@@ -72,18 +78,15 @@ function SuccessContent() {
             Payment Successful!
           </h1>
           <p className="text-gray-300 mb-8">
-            Thank you for your purchase. Your boosting service has been confirmed.
+            Thank you for your purchase. Redirecting to chat with your booster...
           </p>
           <div className="bg-gray-800/50 rounded-xl p-4 mb-6">
             <p className="text-gray-400 text-sm">Session ID</p>
             <p className="text-white font-mono text-xs">{sessionId}</p>
           </div>
-          <button
-            onClick={() => router.push("/")}
-            className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-green-500/30 border border-green-500/30"
-          >
-            Return to Home
-          </button>
+          <div className="animate-pulse">
+            <p className="text-purple-400">Opening chat...</p>
+          </div>
         </div>
       </div>
     </div>
