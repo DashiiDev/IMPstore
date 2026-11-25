@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
@@ -14,12 +14,22 @@ export default function Home() {
   const [showAdminLogin, setShowAdminLogin] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showBoosterPanel, setShowBoosterPanel] = useState(false)
+  const [showChatList, setShowChatList] = useState(false)
   const [language, setLanguage] = useState("en")
   const [boosterUsername, setBoosterUsername] = useState("")
   const [boosterPassword, setBoosterPassword] = useState("")
   const [adminUsername, setAdminUsername] = useState("")
   const [adminPassword, setAdminPassword] = useState("")
+  const [isBooster, setIsBooster] = useState(false)
   const router = useRouter()
+
+  // Check if user is already a booster on mount
+  useEffect(() => {
+    const boosterStatus = localStorage.getItem("isBooster")
+    if (boosterStatus === "true") {
+      setIsBooster(true)
+    }
+  }, [])
 
   // Credentials
   const boosterCreds = {
@@ -34,8 +44,13 @@ export default function Home() {
 
   const handleBoosterLogin = () => {
     if (boosterUsername === boosterCreds.username && boosterPassword === boosterCreds.password) {
+      // Set booster status permanently
+      localStorage.setItem("isBooster", "true")
+      localStorage.setItem("boosterRole", "true")
+      setIsBooster(true)
       setShowBoosterLogin(false)
       setShowBoosterPanel(true)
+      alert("You are now a booster! This status is permanent.")
     } else {
       alert("Invalid credentials")
     }
@@ -122,6 +137,32 @@ export default function Home() {
                 )}
                 <span className="text-white font-semibold">{session.user?.name}</span>
               </div>
+              
+              {/* Booster indicator - only shows if user is a booster */}
+              {isBooster && (
+                <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 rounded-full border border-purple-400/50 shadow-lg shadow-purple-500/30">
+                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 font-bold">
+                    Rosa
+                  </span>
+                </div>
+              )}
+
+              {/* Chat list button for boosters */}
+              {isBooster && (
+                <button
+                  onClick={() => setShowChatList(true)}
+                  className="p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-full border border-purple-500/30 transition-all relative"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                    3
+                  </span>
+                </button>
+              )}
+
               <button
                 onClick={() => setShowSettingsModal(true)}
                 className="p-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-full border border-purple-500/30 transition-all"
@@ -469,11 +510,32 @@ export default function Home() {
               </h3>
               <button onClick={() => setShowBoosterPanel(false)} className="text-gray-400 hover:text-white text-3xl">×</button>
             </div>
-            <div className="bg-gray-800/50 rounded-xl p-6 mb-4">
-              <p className="text-white font-semibold mb-2">Status: Online</p>
-              <p className="text-gray-400">Manage your availability and orders</p>
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-xl p-6 border border-green-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-white font-semibold">Status</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+                    <span className="text-green-400 font-semibold">Online</span>
+                  </div>
+                </div>
+                <p className="text-gray-400 text-sm">You are currently accepting orders</p>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-6">
+                <h4 className="text-white font-semibold mb-2">Active Orders</h4>
+                <p className="text-gray-400 text-sm">3 orders in progress</p>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-6">
+                <h4 className="text-white font-semibold mb-2">Total Earnings</h4>
+                <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">$127.50</p>
+              </div>
+              <button 
+                onClick={() => router.push("/")}
+                className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold transition-all"
+              >
+                View All Chats
+              </button>
             </div>
-            <button onClick={() => setShowBoosterPanel(false)} className="w-full py-3 bg-green-600 text-white rounded-xl">Go Offline</button>
           </div>
         </div>
       )}
@@ -481,7 +543,7 @@ export default function Home() {
       {/* Admin Panel */}
       {showAdminPanel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
-          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-2xl w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+          <div className="bg-gray-950/90 rounded-3xl p-8 max-w-3xl w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                 Admin Panel
@@ -489,13 +551,109 @@ export default function Home() {
               <button onClick={() => setShowAdminPanel(false)} className="text-gray-400 hover:text-white text-3xl">×</button>
             </div>
             <div className="space-y-4">
+              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30">
+                <h4 className="text-white font-semibold mb-4">Dashboard Overview</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+                    <p className="text-3xl font-bold text-purple-400">12</p>
+                    <p className="text-gray-400 text-sm">Active Orders</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+                    <p className="text-3xl font-bold text-pink-400">5</p>
+                    <p className="text-gray-400 text-sm">Boosters Online</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+                    <p className="text-3xl font-bold text-green-400">$1,250</p>
+                    <p className="text-gray-400 text-sm">Revenue</p>
+                  </div>
+                </div>
+              </div>
               <div className="bg-gray-800/50 rounded-xl p-6">
                 <h4 className="text-white font-semibold mb-2">Pending Booster Applications</h4>
-                <p className="text-gray-400">No pending applications</p>
+                <p className="text-gray-400 text-sm">No pending applications</p>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-6">
                 <h4 className="text-white font-semibold mb-2">Active Boosters</h4>
-                <p className="text-gray-400">2 boosters online</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full" />
+                      <span className="text-white">Rosa</span>
+                    </div>
+                    <span className="text-green-400 text-sm">Online</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full" />
+                      <span className="text-white">Booster2</span>
+                    </div>
+                    <span className="text-green-400 text-sm">Online</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat List Modal for Boosters */}
+      {showChatList && (
+        <div className="fixed top-20 right-4 z-50 bg-gray-950/90 backdrop-blur-xl rounded-3xl p-6 max-w-md w-full border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+              Your Chats
+            </h3>
+            <button
+              onClick={() => setShowChatList(false)}
+              className="text-gray-400 hover:text-white text-2xl transition-colors"
+            >
+              ×
+            </button>
+          </div>
+          <div className="space-y-3">
+            <div 
+              onClick={() => { setShowChatList(false); router.push("/chat/chat-session-1") }}
+              className="bg-gray-800/50 hover:bg-gray-700/50 rounded-xl p-4 cursor-pointer transition-all border border-purple-500/20 hover:border-purple-500/50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                  C
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-semibold">Customer 1</p>
+                  <p className="text-gray-400 text-sm">RLSS: Bronze to Champion</p>
+                </div>
+                <div className="w-3 h-3 bg-green-400 rounded-full" />
+              </div>
+            </div>
+            <div 
+              onClick={() => { setShowChatList(false); router.push("/chat/chat-session-2") }}
+              className="bg-gray-800/50 hover:bg-gray-700/50 rounded-xl p-4 cursor-pointer transition-all border border-purple-500/20 hover:border-purple-500/50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                  C
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-semibold">Customer 2</p>
+                  <p className="text-gray-400 text-sm">RL: Silver to Diamond</p>
+                </div>
+                <div className="w-3 h-3 bg-gray-400 rounded-full" />
+              </div>
+            </div>
+            <div 
+              onClick={() => { setShowChatList(false); router.push("/chat/chat-session-3") }}
+              className="bg-gray-800/50 hover:bg-gray-700/50 rounded-xl p-4 cursor-pointer transition-all border border-purple-500/20 hover:border-purple-500/50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                  C
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-semibold">Customer 3</p>
+                  <p className="text-gray-400 text-sm">RLSS: Gold to GC</p>
+                </div>
+                <div className="w-3 h-3 bg-green-400 rounded-full" />
               </div>
             </div>
           </div>

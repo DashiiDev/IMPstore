@@ -3,12 +3,15 @@
 import { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
+import Image from "next/image"
 
 interface Message {
   id: string
   sender: "customer" | "booster"
   text: string
   timestamp: Date
+  senderName?: string
+  senderImage?: string
 }
 
 export default function ChatPage() {
@@ -23,6 +26,8 @@ export default function ChatPage() {
       sender: "booster",
       text: "Hello! I'm your booster. I'll be working on your rank boost. Feel free to ask any questions!",
       timestamp: new Date(),
+      senderName: "Rosa",
+      senderImage: "/imgs/Imp/pfp impulse.png",
     },
   ])
   const [newMessage, setNewMessage] = useState("")
@@ -40,13 +45,9 @@ export default function ChatPage() {
   }, [messages])
 
   useEffect(() => {
-    // Check if user is a booster (this would come from a database/API in production)
-    const checkBoosterRole = () => {
-      // For now, we'll check localStorage or session
-      const boosterRole = localStorage.getItem("boosterRole")
-      setIsBooster(boosterRole === "true")
-    }
-    checkBoosterRole()
+    // Check if user is a booster
+    const boosterRole = localStorage.getItem("isBooster")
+    setIsBooster(boosterRole === "true")
   }, [])
 
   const handleSendMessage = () => {
@@ -57,6 +58,8 @@ export default function ChatPage() {
       sender: isBooster ? "booster" : "customer",
       text: newMessage,
       timestamp: new Date(),
+      senderName: isBooster ? "Rosa" : session?.user?.name || "Customer",
+      senderImage: isBooster ? "/imgs/Imp/pfp impulse.png" : session?.user?.image || "",
     }
 
     setMessages([...messages, message])
@@ -101,9 +104,21 @@ export default function ChatPage() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-purple-500 rounded-full blur-md animate-pulse" />
-              <div className="relative w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                {session?.user?.name?.[0] || "U"}
-              </div>
+              {session?.user?.image ? (
+                <div className="relative w-10 h-10">
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
+                    fill
+                    className="rounded-full border-2 border-purple-500 object-cover"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="relative w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-purple-500">
+                  {session?.user?.name?.[0] || "U"}
+                </div>
+              )}
             </div>
             <span className="text-white font-semibold">{session?.user?.name || "User"}</span>
           </div>
@@ -120,20 +135,56 @@ export default function ChatPage() {
                 key={message.id}
                 className={`flex ${message.sender === (isBooster ? "booster" : "customer") ? "justify-end" : "justify-start"}`}
               >
-                <div
-                  className={`max-w-[70%] rounded-2xl p-4 ${
-                    message.sender === (isBooster ? "booster" : "customer")
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-800 text-white"
-                  }`}
-                >
-                  <p className="text-sm mb-1">
-                    {message.sender === "booster" ? "Booster" : "Customer"}
-                  </p>
-                  <p>{message.text}</p>
-                  <p className="text-xs mt-2 opacity-70">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </p>
+                <div className="flex items-end gap-3 max-w-[70%]">
+                  {message.sender !== (isBooster ? "booster" : "customer") && (
+                    <div className="relative w-10 h-10 flex-shrink-0">
+                      {message.senderImage ? (
+                        <Image
+                          src={message.senderImage}
+                          alt={message.senderName || "User"}
+                          fill
+                          className="rounded-full border-2 border-purple-500 object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-purple-500">
+                          {message.senderName?.[0] || "U"}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div
+                    className={`rounded-2xl p-4 ${
+                      message.sender === (isBooster ? "booster" : "customer")
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-800 text-white"
+                    }`}
+                  >
+                    <p className="text-sm mb-1 font-semibold">
+                      {message.senderName || (message.sender === "booster" ? "Booster" : "Customer")}
+                    </p>
+                    <p>{message.text}</p>
+                    <p className="text-xs mt-2 opacity-70">
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  {message.sender === (isBooster ? "booster" : "customer") && (
+                    <div className="relative w-10 h-10 flex-shrink-0">
+                      {message.senderImage ? (
+                        <Image
+                          src={message.senderImage}
+                          alt={message.senderName || "User"}
+                          fill
+                          className="rounded-full border-2 border-purple-500 object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-purple-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-purple-500">
+                          {message.senderName?.[0] || "U"}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
