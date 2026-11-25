@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useParams, useSearchParams } from "next/navigation"
 import Image from "next/image"
+import { supabase } from "@/lib/supabase"
 
 interface Message {
   id: string
@@ -28,6 +29,7 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState("")
   const [userRole, setUserRole] = useState<"dev" | "booster" | "customer">("customer")
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -57,51 +59,124 @@ export default function ChatPage() {
     }
   }, [])
 
+  // Load messages from Supabase
   useEffect(() => {
-    // Simulate receiving messages (in real app, this would be from WebSocket/Server-Sent Events)
-    const interval = setInterval(() => {
-      const storedMessages = localStorage.getItem(`chat_${chatId}`)
-      if (storedMessages) {
-        const parsed = JSON.parse(storedMessages)
-        if (parsed.length > messages.length) {
-          // New message received
-          const newMsg = parsed[parsed.length - 1]
+    loadMessages()
+    
+    // Subscribe to new messages in real-time
+    const channel = supabase
+      .channel(`chat:${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          const newMsg = payload.new as any
+          const message: Message = {
+            id: newMsg.id,
+            sender: newMsg.sender,
+            text: newMsg.text,
+            timestamp: new Date(newMsg.created_at),
+            senderName: newMsg.sender_name,
+            senderImage: newMsg.sender_image,
+            senderRole: newMsg.sender_role as "dev" | "booster" | "customer",
+            game: game,
+          }
+          
+          setMessages(prev => [...prev, message])
+          
+          // Show notification if message is from someone else
           if (newMsg.sender !== userRole) {
             setUnreadCount(prev => prev + 1)
-            // Show browser notification
             if ("Notification" in window && Notification.permission === "granted") {
               new Notification("New Message", {
-                body: `${newMsg.senderName}: ${newMsg.text}`,
+                body: `${newMsg.sender_name}: ${newMsg.text}`,
                 icon: "/imgs/Imp/pfp impulse.png"
               })
             }
           }
-          setMessages(parsed)
         }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [chatId, userRole, game])
+
+  const loadMessages = async () => {
+    setIsLoading(true)
+    try {
+      // Check if chat exists, if not create it
+      const { data: existingChat } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('chat_id', chatId)
+        .single()
+
+      if (!existingChat) {
+        await supabase.from('chats').insert({
+          chat_id: chatId,
+          game: game,
+          status: 'active'
+        })
       }
-    }, 2000)
 
-    return () => clearInterval(interval)
-  }, [chatId, messages.length, userRole])
+      // Load messages
+      const { data: messagesData, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true })
 
-  const handleSendMessage = () => {
+      if (error) {
+        console.error('Error loading messages:', error)
+      } else if (messagesData) {
+        const formattedMessages: Message[] = messagesData.map(msg => ({
+          id: msg.id,
+          sender: msg.sender as "customer" | "booster" | "dev",
+          text: msg.text,
+          timestamp: new Date(msg.created_at),
+          senderName: msg.sender_name || undefined,
+          senderImage: msg.sender_image || undefined,
+          senderRole: msg.sender_role as "dev" | "booster" | "customer" | undefined,
+          game: game,
+        }))
+        setMessages(formattedMessages)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSendMessage = async () => {
     if (!newMessage.trim()) return
 
-    const message: Message = {
-      id: Date.now().toString(),
+    const messageData = {
+      chat_id: chatId,
       sender: userRole === "customer" ? "customer" : userRole === "booster" ? "booster" : "dev",
       text: newMessage,
-      timestamp: new Date(),
-      senderName: userRole === "dev" ? "Dev" : userRole === "booster" ? "Rosa" : session?.user?.name || "Customer",
-      senderImage: userRole === "dev" || userRole === "booster" ? "/imgs/Imp/pfp impulse.png" : session?.user?.image || "",
-      senderRole: userRole,
-      game: game,
+      sender_name: userRole === "dev" ? "Dev" : userRole === "booster" ? "Rosa" : session?.user?.name || "Customer",
+      sender_image: userRole === "dev" || userRole === "booster" ? "/imgs/Imp/pfp impulse.png" : session?.user?.image || "",
+      sender_role: userRole,
     }
 
-    const updatedMessages = [...messages, message]
-    setMessages(updatedMessages)
-    localStorage.setItem(`chat_${chatId}`, JSON.stringify(updatedMessages))
-    setNewMessage("")
+    try {
+      const { error } = await supabase.from('messages').insert(messageData)
+      if (error) {
+        console.error('Error sending message:', error)
+      } else {
+        setNewMessage("")
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
   }
 
   const getRoleGradient = (role: string) => {
@@ -128,7 +203,7 @@ export default function ChatPage() {
     return "Game"
   }
 
-  if (status === "loading") {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-white text-2xl font-semibold">Loading...</div>

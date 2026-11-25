@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { supabase } from "@/lib/supabase"
 
 interface Client {
   id: string
@@ -23,6 +24,7 @@ export default function BoosterPanel() {
   const [activeTab, setActiveTab] = useState<"chats" | "orders" | "profile">("chats")
   const [clients, setClients] = useState<Client[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const boosterStatus = localStorage.getItem("isBooster")
@@ -34,38 +36,35 @@ export default function BoosterPanel() {
   }, [router])
 
   useEffect(() => {
-    // Load clients from localStorage (real chats from Stripe purchases)
-    const loadClients = () => {
-      const allChats = Object.keys(localStorage).filter(key => key.startsWith("chat_"))
-      const clientList: Client[] = allChats.map(chatId => {
-        const chatData = localStorage.getItem(chatId)
-        if (chatData) {
-          const messages = JSON.parse(chatData)
-          const lastMsg = messages[messages.length - 1]
-          const gameId = chatId.replace("chat_", "")
-          const isRLSS = gameId.includes("rocket-league-sideswipe")
-          
-          return {
-            id: gameId,
-            name: lastMsg?.senderName || "Customer",
-            game: isRLSS ? "rocket-league-sideswipe" : "rocket-league",
-            status: "active",
-            lastMessage: lastMsg?.text || "No messages yet",
-            lastMessageTime: lastMsg?.timestamp ? new Date(lastMsg.timestamp) : new Date(),
-            unread: 0,
-          }
-        }
-        return null
-      }).filter(Boolean) as Client[]
-      
-      setClients(clientList)
-    }
-
+    // Load clients from Supabase
     loadClients()
     
-    // Poll for new chats every 3 seconds
-    const interval = setInterval(loadClients, 3000)
-    return () => clearInterval(interval)
+    // Subscribe to new chats
+    const channel = supabase
+      .channel('chats-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chats'
+        },
+        () => loadClients()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        () => loadClients()
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   useEffect(() => {
@@ -74,6 +73,58 @@ export default function BoosterPanel() {
       Notification.requestPermission()
     }
   }, [])
+
+  const loadClients = async () => {
+    setIsLoading(true)
+    try {
+      // Get all chats
+      const { data: chatsData, error: chatsError } = await supabase
+        .from('chats')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (chatsError) {
+        console.error('Error loading chats:', chatsError)
+        return
+      }
+
+      if (!chatsData || chatsData.length === 0) {
+        setClients([])
+        setIsLoading(false)
+        return
+      }
+
+      // Get last message for each chat
+      const clientList: Client[] = await Promise.all(
+        chatsData.map(async (chat) => {
+          const { data: messagesData } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('chat_id', chat.chat_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+
+          const lastMsg = messagesData && messagesData.length > 0 ? messagesData[0] : null
+          
+          return {
+            id: chat.chat_id,
+            name: lastMsg?.sender_name || "Customer",
+            game: chat.game,
+            status: chat.status as "pending" | "active" | "completed",
+            lastMessage: lastMsg?.text || "No messages yet",
+            lastMessageTime: lastMsg ? new Date(lastMsg.created_at) : new Date(chat.created_at),
+            unread: 0,
+          }
+        })
+      )
+
+      setClients(clientList)
+    } catch (error) {
+      console.error('Error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const getGameIcon = (game: string) => {
     if (game === "rocket-league") return "/imgs/KE6nXem.png"
@@ -87,18 +138,26 @@ export default function BoosterPanel() {
     return "bg-gray-600"
   }
 
-  const handleDeleteChat = (clientId: string, e: React.MouseEvent) => {
+  const handleDeleteChat = async (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    localStorage.removeItem(`chat_${clientId}`)
-    setClients(clients.filter(c => c.id !== clientId))
+    try {
+      await supabase.from('chats').delete().eq('chat_id', clientId)
+      setClients(clients.filter(c => c.id !== clientId))
+    } catch (error) {
+      console.error('Error deleting chat:', error)
+    }
   }
 
-  const handleCloseChat = (clientId: string, e: React.MouseEvent) => {
+  const handleCloseChat = async (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    // Mark as completed instead of deleting
-    setClients(clients.map(c => 
-      c.id === clientId ? { ...c, status: "completed" } : c
-    ))
+    try {
+      await supabase.from('chats').update({ status: 'completed' }).eq('chat_id', clientId)
+      setClients(clients.map(c => 
+        c.id === clientId ? { ...c, status: "completed" } : c
+      ))
+    } catch (error) {
+      console.error('Error closing chat:', error)
+    }
   }
 
   if (!isBooster) {
@@ -207,7 +266,11 @@ export default function BoosterPanel() {
           {activeTab === "chats" && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-white mb-4">Client Chats</h2>
-              {clients.length === 0 ? (
+              {isLoading ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-sm">Loading chats...</p>
+                </div>
+              ) : clients.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-[#1f2023] rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +338,11 @@ export default function BoosterPanel() {
           {activeTab === "orders" && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-white mb-4">Active Orders</h2>
-              {clients.filter(c => c.status === "active" || c.status === "pending").length === 0 ? (
+              {isLoading ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-sm">Loading orders...</p>
+                </div>
+              ) : clients.filter(c => c.status === "active" || c.status === "pending").length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-sm">No active orders</p>
                 </div>
