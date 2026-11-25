@@ -201,24 +201,47 @@ export default function BoostingPage() {
     if (!currentRank || !desiredRank) return 0
 
     const rankOrder = ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Champion"]
+    
+    // Extract base rank name (Bronze, Silver, etc.)
     const currentBaseRank = currentRank.split(" ")[0]
     const desiredBaseRank = desiredRank.split(" ")[0]
+
+    console.log("Price calculation debug:", { 
+      currentRank, 
+      desiredRank, 
+      currentBaseRank, 
+      desiredBaseRank,
+      mode, 
+      selectedExtra 
+    })
 
     const currentIndex = rankOrder.indexOf(currentBaseRank)
     const desiredIndex = rankOrder.indexOf(desiredBaseRank)
 
-    if (currentIndex >= desiredIndex) return 0
+    console.log("Indices:", { currentIndex, desiredIndex })
+
+    if (currentIndex === -1 || desiredIndex === -1) {
+      console.error("Invalid rank name found")
+      return 0
+    }
+
+    if (currentIndex >= desiredIndex) {
+      console.log("Current rank is same or higher than desired rank")
+      return 0
+    }
 
     let basePrice = 0
     for (let i = currentIndex; i < desiredIndex; i++) {
       const modePrices = prices[mode as keyof typeof prices]
-      const rankPrice = modePrices[rankOrder[i] as keyof typeof modePrices]
+      const rankName = rankOrder[i]
+      const rankPrice = modePrices[rankName as keyof typeof modePrices]
+      console.log(`Adding price for ${rankName} in ${mode}: ${rankPrice}`)
       basePrice += rankPrice
     }
 
     const extrasPrice = selectedExtra ? extraServices[selectedExtra as keyof typeof extraServices] : 0
 
-    console.log("Price calculation:", { currentRank, desiredRank, mode, selectedExtra, basePrice, extrasPrice, total: basePrice + extrasPrice })
+    console.log("Final price:", { basePrice, extrasPrice, total: basePrice + extrasPrice })
 
     return basePrice + extrasPrice
   }
