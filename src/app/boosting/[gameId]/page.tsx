@@ -286,8 +286,14 @@ export default function BoostingPage() {
 
       const { sessionId } = data
 
-      // Redirect to Stripe Checkout using window.location
-      window.location.href = `https://checkout.stripe.com/pay/${sessionId}`
+      // Use Stripe.js to redirect to checkout
+      const stripe = (window as any).Stripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+      const { error } = await stripe.redirectToCheckout({ sessionId })
+      
+      if (error) {
+        console.error("Stripe redirect error:", error)
+        alert(error.message || "Failed to redirect to checkout")
+      }
     } catch (error) {
       console.error("Purchase error:", error)
       alert("Failed to initiate checkout")
