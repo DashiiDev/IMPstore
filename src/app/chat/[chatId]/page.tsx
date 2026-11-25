@@ -61,6 +61,12 @@ export default function ChatPage() {
 
   // Load messages from Supabase
   useEffect(() => {
+    if (!supabase) {
+      console.error('Supabase is not configured')
+      setIsLoading(false)
+      return
+    }
+
     loadMessages()
     
     // Subscribe to new messages in real-time
@@ -104,11 +110,17 @@ export default function ChatPage() {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (supabase) supabase.removeChannel(channel)
     }
   }, [chatId, userRole, game])
 
   const loadMessages = async () => {
+    if (!supabase) {
+      console.error('Supabase is not configured')
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     try {
       // Check if chat exists, if not create it
@@ -157,6 +169,10 @@ export default function ChatPage() {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return
+    if (!supabase) {
+      console.error('Supabase is not configured')
+      return
+    }
 
     const messageData = {
       chat_id: chatId,

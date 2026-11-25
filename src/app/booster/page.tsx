@@ -36,6 +36,12 @@ export default function BoosterPanel() {
   }, [router])
 
   useEffect(() => {
+    if (!supabase) {
+      console.error('Supabase is not configured')
+      setIsLoading(false)
+      return
+    }
+
     // Load clients from Supabase
     loadClients()
     
@@ -63,7 +69,7 @@ export default function BoosterPanel() {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (supabase) supabase.removeChannel(channel)
     }
   }, [])
 
@@ -75,6 +81,12 @@ export default function BoosterPanel() {
   }, [])
 
   const loadClients = async () => {
+    if (!supabase) {
+      console.error('Supabase is not configured')
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     try {
       // Get all chats
@@ -97,7 +109,7 @@ export default function BoosterPanel() {
       // Get last message for each chat
       const clientList: Client[] = await Promise.all(
         chatsData.map(async (chat) => {
-          const { data: messagesData } = await supabase
+          const { data: messagesData } = await supabase!
             .from('messages')
             .select('*')
             .eq('chat_id', chat.chat_id)
@@ -140,6 +152,7 @@ export default function BoosterPanel() {
 
   const handleDeleteChat = async (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!supabase) return
     try {
       await supabase.from('chats').delete().eq('chat_id', clientId)
       setClients(clients.filter(c => c.id !== clientId))
@@ -150,6 +163,7 @@ export default function BoosterPanel() {
 
   const handleCloseChat = async (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!supabase) return
     try {
       await supabase.from('chats').update({ status: 'completed' }).eq('chat_id', clientId)
       setClients(clients.map(c => 
