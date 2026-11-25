@@ -164,6 +164,11 @@ export default function BoosterPanel() {
   const handleCloseChat = async (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     if (!supabase) return
+    
+    if (!confirm("Are you sure you want to close this chat? The customer will still be able to access it, but it will be marked as completed.")) {
+      return
+    }
+    
     try {
       await supabase.from('chats').update({ status: 'completed' }).eq('chat_id', clientId)
       setClients(clients.map(c => 
