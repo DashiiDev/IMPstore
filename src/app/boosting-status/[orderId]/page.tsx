@@ -319,7 +319,7 @@ export default function BoostingStatusPage() {
                 </div>
                 <p className="text-yellow-500 font-semibold mb-2">Awaiting Booster</p>
                 <p className="text-gray-400 text-sm">Your order is pending until a booster accepts it</p>
-                {userRole === "booster" && (
+                {(userRole === "booster" || userRole === "dev") && (
                   <button
                     onClick={handleAcceptOrder}
                     className="mt-6 px-6 py-3 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-lg font-semibold transition-colors"
