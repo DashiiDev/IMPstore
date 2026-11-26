@@ -201,7 +201,11 @@ export default function BoostingStatusPage() {
   }
 
   const handleAcceptOrder = async () => {
-    if (!supabase) return
+    console.log('handleAcceptOrder called!')
+    if (!supabase) {
+      console.log('Supabase is null')
+      return
+    }
 
     console.log('Accepting order:', orderId)
     
