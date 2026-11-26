@@ -121,7 +121,7 @@ export default function BoostingStatusPage() {
         .from('chats')
         .select('*')
         .eq('chat_id', orderId)
-        .single()
+        .maybeSingle()
 
       console.log('Existing chat:', existingChat, 'Error:', chatError)
 
