@@ -304,7 +304,7 @@ export default function BoosterPanel() {
                   {clients.map((client) => (
                     <div
                       key={client.id}
-                      onClick={() => router.push(`/chat/${client.id}?game=${client.game}`)}
+                      onClick={() => router.push(`/boosting-status/${client.id}?game=${client.game}`)}
                       className="flex items-center gap-3 p-3 bg-[#2b2d31] rounded-lg cursor-pointer hover:bg-[#404249] transition-colors border border-[#1f2023] relative"
                     >
                       <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
@@ -388,7 +388,7 @@ export default function BoosterPanel() {
                           {client.status === "pending" ? "Accept Order" : "Start Boost"}
                         </button>
                         <button 
-                          onClick={() => router.push(`/chat/${client.id}?game=${client.game}`)}
+                          onClick={() => router.push(`/boosting-status/${client.id}?game=${client.game}`)}
                           className="px-3 py-2 bg-[#404249] hover:bg-[#4f545c] text-white rounded-lg transition-colors text-sm"
                         >
                           Chat
