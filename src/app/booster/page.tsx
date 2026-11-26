@@ -384,7 +384,10 @@ export default function BoosterPanel() {
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 py-2 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-lg font-semibold transition-colors text-sm">
+                        <button
+                          onClick={() => router.push(`/boosting-status/${client.id}?game=${client.game}`)}
+                          className="flex-1 py-2 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-lg font-semibold transition-colors text-sm"
+                        >
                           {client.status === "pending" ? "Accept Order" : "Start Boost"}
                         </button>
                         <button 
