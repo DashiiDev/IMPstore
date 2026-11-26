@@ -115,14 +115,27 @@ export default function BoostingStatusPage() {
     if (!supabase) return
 
     try {
-      const { data: existingChat } = await supabase
+      console.log('Loading chat for:', orderId)
+      
+      const { data: existingChat, error: chatError } = await supabase
         .from('chats')
         .select('*')
         .eq('chat_id', orderId)
         .single()
 
+      console.log('Existing chat:', existingChat, 'Error:', chatError)
+
       if (existingChat) {
         setOrderStatus(existingChat.status as "pending" | "active" | "completed")
+      } else {
+        // Create chat if it doesn't exist
+        console.log('Creating new chat...')
+        const { error: createError } = await supabase.from('chats').insert({
+          chat_id: orderId,
+          game: game,
+          status: 'pending'
+        })
+        console.log('Create error:', createError)
       }
 
       const { data: messagesData } = await supabase
@@ -130,6 +143,8 @@ export default function BoostingStatusPage() {
         .select('*')
         .eq('chat_id', orderId)
         .order('created_at', { ascending: true })
+
+      console.log('Messages:', messagesData)
 
       if (messagesData) {
         const formattedMessages: Message[] = messagesData.map(msg => ({
