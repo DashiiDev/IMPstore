@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
-import { gamesData } from "@/lib/ranks"
+import { gamesData, calculateProgress } from "@/lib/ranks"
 
 interface Message {
   id: string
@@ -39,6 +39,7 @@ export default function BoostingStatusPage() {
   const [progress, setProgress] = useState(0)
   const [currentRank, setCurrentRank] = useState("")
   const [desiredRank, setDesiredRank] = useState("")
+  const [initialRank, setInitialRank] = useState("")
   const [currentDivision, setCurrentDivision] = useState(1)
   const [currentProgress, setCurrentProgress] = useState(0)
   const [isChatMinimized, setIsChatMinimized] = useState(false)
@@ -64,8 +65,14 @@ export default function BoostingStatusPage() {
       const details = JSON.parse(boostingDetails)
       setCurrentRank(details.currentRank || "")
       setDesiredRank(details.desiredRank || "")
+      setInitialRank(details.currentRank || "")
       setCurrentDivision(details.currentDivision || 1)
       setCurrentProgress(details.currentProgress || 0)
+      
+      // Calculate initial progress
+      if (details.currentRank && details.desiredRank) {
+        setProgress(calculateProgress(details.currentRank, details.currentRank, details.desiredRank))
+      }
     }
 
     // Check user role
@@ -237,10 +244,13 @@ export default function BoostingStatusPage() {
   const handleProgressUpdate = async (percentage: number, rank: string) => {
     if (!supabase) return
 
+    // Calculate actual progress based on rank positions
+    const actualProgress = calculateProgress(initialRank, rank, desiredRank)
+
     const messageData = {
       chat_id: orderId,
       sender: "booster",
-      text: `Progress updated to ${percentage}% - Current rank: ${rank}`,
+      text: `Progress updated to ${actualProgress}% - Current rank: ${rank}`,
       sender_name: session?.user?.name || "Booster",
       sender_image: session?.user?.image || "",
       sender_role: "booster",
@@ -248,14 +258,14 @@ export default function BoostingStatusPage() {
       progress_data: JSON.stringify({
         currentRank: rank,
         desiredRank: desiredRank,
-        percentage: percentage,
+        percentage: actualProgress,
       }),
     }
 
     try {
       const { error } = await supabase.from('messages').insert(messageData)
       if (!error) {
-        setProgress(percentage)
+        setProgress(actualProgress)
         setCurrentRank(rank)
         setShowProgressSelector(false)
       }
@@ -366,8 +376,8 @@ export default function BoostingStatusPage() {
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
                   <p className="text-gray-400 text-sm mb-2">Current Rank</p>
                   <div 
-                    onClick={() => { setShowRankModal(true); setSelectingDesired(false) }}
-                    className="cursor-pointer hover:bg-[#222222] p-2 rounded-lg transition-colors"
+                    onClick={() => { if (userRole !== "customer") { setShowRankModal(true); setSelectingDesired(false) } }}
+                    className={`${userRole !== "customer" ? "cursor-pointer hover:bg-[#222222]" : ""} p-2 rounded-lg transition-colors`}
                   >
                     <p className="text-white font-semibold text-lg">{currentRank || "Select rank"}</p>
                     <p className="text-gray-500 text-xs">Div {currentDivision} • {currentProgress}%</p>
@@ -378,8 +388,8 @@ export default function BoostingStatusPage() {
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
                   <p className="text-gray-400 text-sm mb-2">Desired Rank</p>
                   <div 
-                    onClick={() => { setShowRankModal(true); setSelectingDesired(true) }}
-                    className="cursor-pointer hover:bg-[#222222] p-2 rounded-lg transition-colors"
+                    onClick={() => { if (userRole !== "customer") { setShowRankModal(true); setSelectingDesired(true) } }}
+                    className={`${userRole !== "customer" ? "cursor-pointer hover:bg-[#222222]" : ""} p-2 rounded-lg transition-colors`}
                   >
                     <p className="text-green-400 font-semibold text-lg">{desiredRank || "Select rank"}</p>
                   </div>
