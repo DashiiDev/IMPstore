@@ -199,9 +199,16 @@ export default function BoostingStatusPage() {
   const handleAcceptOrder = async () => {
     if (!supabase) return
 
+    console.log('Accepting order:', orderId)
+    
     try {
-      await supabase.from('chats').update({ status: 'active' }).eq('chat_id', orderId)
-      setOrderStatus("active")
+      const { error } = await supabase.from('chats').update({ status: 'active' }).eq('chat_id', orderId)
+      console.log('Update error:', error)
+      
+      if (!error) {
+        setOrderStatus("active")
+        console.log('Order accepted successfully')
+      }
     } catch (error) {
       console.error('Error:', error)
     }
