@@ -93,6 +93,7 @@ export default function BoostingStatusPage() {
 
     loadMessages()
     
+    // Subscribe to new messages in real-time
     const channel = supabase
       .channel(`chat:${orderId}`)
       .on(
@@ -127,12 +128,43 @@ export default function BoostingStatusPage() {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chats',
+          filter: `chat_id=eq.${orderId}`
+        },
+        (payload) => {
+          const updatedChat = payload.new as any
+          console.log('Chat updated:', updatedChat)
+          
+          // Update progress data from chat
+          if (updatedChat.current_rank) setCurrentRank(updatedChat.current_rank)
+          if (updatedChat.desired_rank) setDesiredRank(updatedChat.desired_rank)
+          if (updatedChat.current_division) setCurrentDivision(updatedChat.current_division)
+          if (updatedChat.current_progress !== null) setCurrentProgress(updatedChat.current_progress)
+          if (updatedChat.initial_rank) setInitialRank(updatedChat.initial_rank)
+          if (updatedChat.status) setOrderStatus(updatedChat.status)
+          
+          // Recalculate progress
+          if (updatedChat.initial_rank && updatedChat.current_rank && updatedChat.desired_rank) {
+            const calculatedProgress = calculateProgress(
+              updatedChat.initial_rank,
+              updatedChat.current_rank,
+              updatedChat.desired_rank
+            )
+            setProgress(calculatedProgress)
+          }
+        }
+      )
       .subscribe()
 
     return () => {
       if (supabase) supabase.removeChannel(channel)
     }
-  }, [orderId, game])
+  }, [orderId, game, initialRank, desiredRank])
 
   const loadMessages = async () => {
     if (!supabase) return
@@ -150,15 +182,47 @@ export default function BoostingStatusPage() {
 
       if (existingChat) {
         setOrderStatus(existingChat.status as "pending" | "active" | "completed")
+        // Load progress data from chat
+        if (existingChat.current_rank) setCurrentRank(existingChat.current_rank)
+        if (existingChat.desired_rank) setDesiredRank(existingChat.desired_rank)
+        if (existingChat.current_division) setCurrentDivision(existingChat.current_division)
+        if (existingChat.current_progress !== null) setCurrentProgress(existingChat.current_progress)
+        if (existingChat.initial_rank) setInitialRank(existingChat.initial_rank)
+        
+        // Calculate progress if we have all data
+        if (existingChat.initial_rank && existingChat.current_rank && existingChat.desired_rank) {
+          const calculatedProgress = calculateProgress(
+            existingChat.initial_rank,
+            existingChat.current_rank,
+            existingChat.desired_rank
+          )
+          setProgress(calculatedProgress)
+        }
       } else {
         // Create chat if it doesn't exist
         console.log('Creating new chat...')
+        const boostingDetails = localStorage.getItem("boostingDetails")
+        const details = boostingDetails ? JSON.parse(boostingDetails) : {}
+        
         const { error: createError } = await supabase.from('chats').insert({
           chat_id: orderId,
           game: game,
-          status: 'pending'
+          status: 'pending',
+          current_rank: details.currentRank || "",
+          desired_rank: details.desiredRank || "",
+          current_division: details.currentDivision || 1,
+          current_progress: details.currentProgress || 0,
+          initial_rank: details.currentRank || "",
         })
         console.log('Create error:', createError)
+        
+        if (!createError) {
+          setCurrentRank(details.currentRank || "")
+          setDesiredRank(details.desiredRank || "")
+          setCurrentDivision(details.currentDivision || 1)
+          setCurrentProgress(details.currentProgress || 0)
+          setInitialRank(details.currentRank || "")
+        }
       }
 
       const { data: messagesData } = await supabase
@@ -244,8 +308,13 @@ export default function BoostingStatusPage() {
   const handleProgressUpdate = async (percentage: number, rank: string) => {
     if (!supabase) return
 
-    // Calculate actual progress based on rank positions
     const actualProgress = calculateProgress(initialRank, rank, desiredRank)
+
+    // Update chat table
+    await supabase.from('chats').update({
+      current_rank: rank,
+      current_progress: actualProgress
+    }).eq('chat_id', orderId)
 
     const messageData = {
       chat_id: orderId,
