@@ -145,6 +145,8 @@ export default function BoostingPage() {
 
   const [currentRank, setCurrentRank] = useState("")
   const [desiredRank, setDesiredRank] = useState("")
+  const [currentDivision, setCurrentDivision] = useState(1)
+  const [currentProgress, setCurrentProgress] = useState(0)
   const [mode, setMode] = useState("1v1")
   const [selectedExtra, setSelectedExtra] = useState<string>("")
   const [showModeSelection, setShowModeSelection] = useState(false)
@@ -240,6 +242,16 @@ export default function BoostingPage() {
 
   const handlePurchase = async () => {
     try {
+      // Save boosting details to localStorage for status page
+      localStorage.setItem("boostingDetails", JSON.stringify({
+        currentRank,
+        desiredRank,
+        currentDivision,
+        currentProgress,
+        mode,
+        game: gameId,
+      }))
+
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -247,10 +259,12 @@ export default function BoostingPage() {
           amount: totalPrice,
           boostingDetails: {
             serviceName: `${game.name} Boosting`,
-            description: `Boost from ${currentRank} to ${desiredRank} in ${mode} mode${selectedExtra ? ` with ${selectedExtra}` : ""}`,
+            description: `Boost from ${currentRank} (Div ${currentDivision}, ${currentProgress}%) to ${desiredRank} in ${mode} mode${selectedExtra ? ` with ${selectedExtra}` : ""}`,
             gameId: gameId,
             currentRank,
             desiredRank,
+            currentDivision,
+            currentProgress,
             mode,
             extraService: selectedExtra,
           },
@@ -375,15 +389,49 @@ export default function BoostingPage() {
                   ))}
                 </select>
                 {currentRank && (
-                  <div className="mt-4 flex items-center justify-center">
-                    <div className="relative w-24 h-24">
-                      <Image
-                        src={game.ranks.find(r => r.name === currentRank)?.image || ""}
-                        alt={currentRank}
-                        fill
-                        className="object-contain"
-                        unoptimized
+                  <div className="mt-4 space-y-4">
+                    <div className="flex items-center justify-center">
+                      <div className="relative w-24 h-24">
+                        <Image
+                          src={game.ranks.find(r => r.name === currentRank)?.image || ""}
+                          alt={currentRank}
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-gray-400 text-sm mb-2 block">Division</label>
+                      <select
+                        value={currentDivision}
+                        onChange={(e) => setCurrentDivision(Number(e.target.value))}
+                        className="w-full bg-gray-800 text-white rounded-xl px-4 py-2 border border-purple-500/30 focus:border-purple-500 focus:outline-none"
+                      >
+                        <option value={1}>Division I</option>
+                        <option value={2}>Division II</option>
+                        <option value={3}>Division III</option>
+                        <option value={4}>Division IV</option>
+                        <option value={5}>Division V</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-gray-400 text-sm mb-2 block">Progress within division: {currentProgress}%</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={currentProgress}
+                        onChange={(e) => setCurrentProgress(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                       />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -1,0 +1,52 @@
+export const gamesData: Record<string, { name: string; ranks: Array<{ name: string; image: string }> }> = {
+  "rocket-league": {
+    name: "Rocket League",
+    ranks: [
+      { name: "Bronze 1", image: "/imgs/ranks/rl/Bronze 1.png" },
+      { name: "Bronze 2", image: "/imgs/ranks/rl/Bronze 2.png" },
+      { name: "Bronze 3", image: "/imgs/ranks/rl/Bronze 3.png" },
+      { name: "Silver 1", image: "/imgs/ranks/rl/Silver 1.png" },
+      { name: "Silver 2", image: "/imgs/ranks/rl/Silver 2.png" },
+      { name: "Silver 3", image: "/imgs/ranks/rl/Silver 3.png" },
+      { name: "Gold 1", image: "/imgs/ranks/rl/Gold 1.png" },
+      { name: "Gold 2", image: "/imgs/ranks/rl/Gold 2.png" },
+      { name: "Gold 3", image: "/imgs/ranks/rl/Gold 3.png" },
+      { name: "Platinum 1", image: "/imgs/ranks/rl/Platinum 1.png" },
+      { name: "Platinum 2", image: "/imgs/ranks/rl/Platinum 2.png" },
+      { name: "Platinum 3", image: "/imgs/ranks/rl/Platinum 3.png" },
+      { name: "Diamond 1", image: "/imgs/ranks/rl/Diamond 1.png" },
+      { name: "Diamond 2", image: "/imgs/ranks/rl/Diamond 2.png" },
+      { name: "Diamond 3", image: "/imgs/ranks/rl/Diamond 3.png" },
+      { name: "Champion 1", image: "/imgs/ranks/rl/Champion 1.png" },
+      { name: "Champion 2", image: "/imgs/ranks/rl/Champion 2.png" },
+      { name: "Champion 3", image: "/imgs/ranks/rl/Champion 3.png" },
+      { name: "Grand Champion", image: "/imgs/ranks/rl/GC.png" },
+    ]
+  },
+  "rocket-league-sideswipe": {
+    name: "Rocket League Sideswipe",
+    ranks: [
+      { name: "Bronze 1", image: "/imgs/ranks/rlss/Bronze 1.png" },
+      { name: "Bronze 2", image: "/imgs/ranks/rlss/Bronze 2.png" },
+      { name: "Bronze 3", image: "/imgs/ranks/rlss/Bronze 3.png" },
+      { name: "Silver 1", image: "/imgs/ranks/rlss/Silver 1.png" },
+      { name: "Silver 2", image: "/imgs/ranks/rlss/Silver 2.png" },
+      { name: "Silver 3", image: "/imgs/ranks/rlss/Silver 3.png" },
+      { name: "Gold 1", image: "/imgs/ranks/rlss/Gold 1.png" },
+      { name: "Gold 2", image: "/imgs/ranks/rlss/Gold 2.png" },
+      { name: "Gold 3", image: "/imgs/ranks/rlss/Gold 3.png" },
+      { name: "Platinum 1", image: "/imgs/ranks/rlss/Platinum 1.png" },
+      { name: "Platinum 2", image: "/imgs/ranks/rlss/Platinum 2.png" },
+      { name: "Platinum 3", image: "/imgs/ranks/rlss/Platinum 3.png" },
+      { name: "Diamond 1", image: "/imgs/ranks/rlss/Diamond 1.png" },
+      { name: "Diamond 2", image: "/imgs/ranks/rlss/Diamond 2.png" },
+      { name: "Diamond 3", image: "/imgs/ranks/rlss/Diamond 3.png" },
+      { name: "Champion 1", image: "/imgs/ranks/rlss/Champion 1.png" },
+      { name: "Champion 2", image: "/imgs/ranks/rlss/Champion 2.png" },
+      { name: "Champion 3", image: "/imgs/ranks/rlss/Champion 3.png" },
+      { name: "Champion 4", image: "/imgs/ranks/rlss/Champion 4.png" },
+      { name: "Champion 5", image: "/imgs/ranks/rlss/Champion 5.png" },
+      { name: "GC", image: "/imgs/ranks/rlss/GC.png" },
+    ]
+  }
+}

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
+import { gamesData } from "@/lib/ranks"
 
 interface Message {
   id: string
@@ -38,8 +39,12 @@ export default function BoostingStatusPage() {
   const [progress, setProgress] = useState(0)
   const [currentRank, setCurrentRank] = useState("")
   const [desiredRank, setDesiredRank] = useState("")
+  const [currentDivision, setCurrentDivision] = useState(1)
+  const [currentProgress, setCurrentProgress] = useState(0)
   const [isChatMinimized, setIsChatMinimized] = useState(false)
   const [showProgressSelector, setShowProgressSelector] = useState(false)
+  const [showRankModal, setShowRankModal] = useState(false)
+  const [selectingDesired, setSelectingDesired] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const ranks = [
@@ -53,16 +58,23 @@ export default function BoostingStatusPage() {
   ]
 
   useEffect(() => {
+    // Load boosting details from localStorage
+    const boostingDetails = localStorage.getItem("boostingDetails")
+    if (boostingDetails) {
+      const details = JSON.parse(boostingDetails)
+      setCurrentRank(details.currentRank || "")
+      setDesiredRank(details.desiredRank || "")
+      setCurrentDivision(details.currentDivision || 1)
+      setCurrentProgress(details.currentProgress || 0)
+    }
+
+    // Check user role
     const isDev = localStorage.getItem("isDev") === "true"
     const isBooster = localStorage.getItem("isBooster") === "true"
-    
-    console.log('Role check - isDev:', isDev, 'isBooster:', isBooster)
     
     if (isDev) setUserRole("dev")
     else if (isBooster) setUserRole("booster")
     else setUserRole("customer")
-    
-    console.log('Set userRole to:', isDev ? 'dev' : isBooster ? 'booster' : 'customer')
   }, [])
 
   useEffect(() => {
@@ -353,13 +365,24 @@ export default function BoostingStatusPage() {
                 {/* Current Rank */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
                   <p className="text-gray-400 text-sm mb-2">Current Rank</p>
-                  <p className="text-white font-semibold text-lg">{currentRank || "Not started"}</p>
+                  <div 
+                    onClick={() => { setShowRankModal(true); setSelectingDesired(false) }}
+                    className="cursor-pointer hover:bg-[#222222] p-2 rounded-lg transition-colors"
+                  >
+                    <p className="text-white font-semibold text-lg">{currentRank || "Select rank"}</p>
+                    <p className="text-gray-500 text-xs">Div {currentDivision} • {currentProgress}%</p>
+                  </div>
                 </div>
 
                 {/* Desired Rank */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
                   <p className="text-gray-400 text-sm mb-2">Desired Rank</p>
-                  <p className="text-green-400 font-semibold text-lg">{desiredRank || "Not set"}</p>
+                  <div 
+                    onClick={() => { setShowRankModal(true); setSelectingDesired(true) }}
+                    className="cursor-pointer hover:bg-[#222222] p-2 rounded-lg transition-colors"
+                  >
+                    <p className="text-green-400 font-semibold text-lg">{desiredRank || "Select rank"}</p>
+                  </div>
                 </div>
 
                 {userRole === "booster" && (
@@ -526,6 +549,56 @@ export default function BoostingStatusPage() {
           </div>
         </div>
       </div>
+
+      {/* Rank Selection Modal */}
+      {showRankModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+          <div className="bg-gray-950/90 rounded-3xl p-6 max-w-4xl w-full mx-4 border border-purple-500/30 shadow-2xl shadow-purple-500/20 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-white">
+                {selectingDesired ? "Select Desired Rank" : "Select Current Rank"}
+              </h3>
+              <button
+                onClick={() => setShowRankModal(false)}
+                className="text-gray-400 hover:text-white text-3xl transition-colors"
+              >
+                ×
+              </button>
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+              {(gamesData[game]?.ranks || []).map((rank) => (
+                <div
+                  key={rank.name}
+                  onClick={() => {
+                    if (selectingDesired) {
+                      setDesiredRank(rank.name)
+                    } else {
+                      setCurrentRank(rank.name)
+                    }
+                    setShowRankModal(false)
+                  }}
+                  className={`cursor-pointer p-4 rounded-xl border-2 transition-all hover:scale-105 ${
+                    (selectingDesired ? desiredRank : currentRank) === rank.name
+                      ? "border-purple-500 bg-purple-900/50"
+                      : "border-transparent hover:border-purple-500/50 bg-gray-900/50"
+                  }`}
+                >
+                  <div className="relative w-20 h-20 mx-auto mb-2">
+                    <Image
+                      src={rank.image}
+                      alt={rank.name}
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                  <p className="text-white text-sm text-center font-semibold">{rank.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
