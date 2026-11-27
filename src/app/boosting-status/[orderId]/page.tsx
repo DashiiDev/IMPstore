@@ -302,7 +302,7 @@ export default function BoostingStatusPage() {
     }
   }
 
-  const handleProgressUpdate = async (percentage: number, rank: string) => {
+  const handleProgressUpdate = async (percentage: number, rank: string, division: number) => {
     if (!supabase) return
 
     const actualProgress = calculateProgress(initialRank, rank, desiredRank)
@@ -310,13 +310,14 @@ export default function BoostingStatusPage() {
     // Update chat table
     await supabase.from('chats').update({
       current_rank: rank,
+      current_division: division,
       current_progress: actualProgress
     }).eq('chat_id', orderId)
 
     const messageData = {
       chat_id: orderId,
       sender: "booster",
-      text: `Progress updated to ${actualProgress}% - Current rank: ${rank}`,
+      text: `Progress updated to ${actualProgress}% - Current rank: ${rank} Div ${division}`,
       sender_name: session?.user?.name || "Booster",
       sender_image: session?.user?.image || "",
       sender_role: "booster",
@@ -325,6 +326,7 @@ export default function BoostingStatusPage() {
         currentRank: rank,
         desiredRank: desiredRank,
         percentage: actualProgress,
+        division: division,
       }),
     }
 
@@ -333,6 +335,7 @@ export default function BoostingStatusPage() {
       if (!error) {
         setProgress(actualProgress)
         setCurrentRank(rank)
+        setCurrentDivision(division)
         setShowProgressSelector(false)
       }
     } catch (error) {
@@ -398,8 +401,8 @@ export default function BoostingStatusPage() {
       {/* Main Content */}
       <div className="flex-1 flex">
         {/* Left Panel - Progress */}
-        <div className={`w-96 bg-[#111111] border-r border-[#222222] flex flex-col ${isChatMinimized ? 'hidden' : ''}`}>
-          <div className="p-6">
+        <div className={`w-96 bg-[#111111] border-r border-[#222222] flex flex-col flex-shrink-0 ${isChatMinimized ? 'hidden' : ''}`}>
+          <div className="p-6 overflow-y-auto flex-1">
             <h2 className="text-xl font-bold text-white mb-6">Boost Progress</h2>
             
             {orderStatus === "pending" && (
@@ -475,18 +478,19 @@ export default function BoostingStatusPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-gray-400 text-sm mb-2 block">Progress %</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={progress}
-                        onChange={(e) => setProgress(Number(e.target.value))}
+                      <label className="text-gray-400 text-sm mb-2 block">Division</label>
+                      <select
+                        value={currentDivision}
+                        onChange={(e) => setCurrentDivision(Number(e.target.value))}
                         className="w-full bg-[#1a1a1a] text-white px-4 py-2 rounded-lg border border-[#404249] focus:border-purple-500 focus:outline-none"
-                      />
+                      >
+                        {[1, 2, 3, 4, 5].map(div => (
+                          <option key={div} value={div}>Division {div}</option>
+                        ))}
+                      </select>
                     </div>
                     <button
-                      onClick={() => handleProgressUpdate(progress, currentRank)}
+                      onClick={() => handleProgressUpdate(progress, currentRank, currentDivision)}
                       className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold transition-colors"
                     >
                       Send Update
@@ -511,9 +515,9 @@ export default function BoostingStatusPage() {
         </div>
 
         {/* Right Panel - Chat */}
-        <div className={`flex-1 flex flex-col ${isChatMinimized ? 'w-full' : ''}`}>
+        <div className={`flex-1 flex flex-col bg-[#111111] ${isChatMinimized ? 'hidden' : ''}`}>
           {/* Chat Header */}
-          <div className="h-12 bg-[#111111] border-b border-[#222222] px-4 flex items-center justify-between">
+          <div className="h-12 bg-[#111111] border-b border-[#222222] px-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
               <span className="text-white font-semibold">Chat with Booster</span>
             </div>
@@ -534,7 +538,7 @@ export default function BoostingStatusPage() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[calc(100vh-300px)]">
             {messages.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-gray-500">No messages yet</p>
