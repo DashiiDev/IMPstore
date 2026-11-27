@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
-import { calculateProgress, rankOrder } from "@/lib/ranks"
+import { calculateProgress, rankOrder, getRankImage } from "@/lib/ranks"
 
 interface Message {
   id: string
@@ -62,9 +62,9 @@ export default function BoostingStatusPage() {
       setCurrentDivision(details.currentDivision || 1)
       setCurrentProgress(details.currentProgress || 0)
       
-      // Calculate initial progress
+      // Calculate initial progress with division
       if (details.currentRank && details.desiredRank) {
-        setProgress(calculateProgress(details.currentRank, details.currentRank, details.desiredRank))
+        setProgress(calculateProgress(details.currentRank, details.currentRank, details.desiredRank, details.currentDivision || 1))
       }
     }
 
@@ -146,12 +146,13 @@ export default function BoostingStatusPage() {
           if (updatedChat.initial_rank) setInitialRank(updatedChat.initial_rank)
           if (updatedChat.status) setOrderStatus(updatedChat.status)
           
-          // Recalculate progress
+          // Recalculate progress with division
           if (updatedChat.initial_rank && updatedChat.current_rank && updatedChat.desired_rank) {
             const calculatedProgress = calculateProgress(
               updatedChat.initial_rank,
               updatedChat.current_rank,
-              updatedChat.desired_rank
+              updatedChat.desired_rank,
+              updatedChat.current_division || 1
             )
             setProgress(calculatedProgress)
           }
@@ -309,7 +310,7 @@ export default function BoostingStatusPage() {
   const handleProgressUpdate = async (percentage: number, rank: string, division: number) => {
     if (!supabase) return
 
-    const actualProgress = calculateProgress(initialRank, rank, desiredRank)
+    const actualProgress = calculateProgress(initialRank, rank, desiredRank, division)
 
     // Update chat table
     await supabase.from('chats').update({
@@ -431,17 +432,47 @@ export default function BoostingStatusPage() {
 
             {orderStatus === "active" && (
               <div className="space-y-6">
-                {/* Progress Bar */}
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-400 text-sm">Progress</span>
-                    <span className="text-white font-semibold">{progress}%</span>
+                {/* Progress Bar with Rank Images */}
+                <div className="flex items-center gap-4">
+                  {/* Current Rank Image */}
+                  <div className="flex-shrink-0 w-20 h-20">
+                    {currentRank && (
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={getRankImage(currentRank, game)}
+                          alt={currentRank}
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="h-4 bg-[#1a1a1a] rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
+
+                  {/* Progress Bar */}
+                  <div className="flex-1">
+                    <div className="h-4 bg-[#1a1a1a] rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <p className="text-center text-white font-bold mt-2">{progress}%</p>
+                  </div>
+
+                  {/* Desired Rank Image */}
+                  <div className="flex-shrink-0 w-20 h-20">
+                    {desiredRank && (
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={getRankImage(desiredRank, game)}
+                          alt={desiredRank}
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
