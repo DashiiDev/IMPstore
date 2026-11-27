@@ -72,9 +72,13 @@ export default function BoostingStatusPage() {
     const isDev = localStorage.getItem("isDev") === "true"
     const isBooster = localStorage.getItem("isBooster") === "true"
     
+    console.log('Role check - isDev:', isDev, 'isBooster:', isBooster)
+    
     if (isDev) setUserRole("dev")
     else if (isBooster) setUserRole("booster")
     else setUserRole("customer")
+    
+    console.log('Set userRole to:', userRole)
   }, [])
 
   useEffect(() => {
