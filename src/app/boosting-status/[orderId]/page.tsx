@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
-import { calculateProgress } from "@/lib/ranks"
+import { calculateProgress, rankOrder } from "@/lib/ranks"
 
 interface Message {
   id: string
@@ -46,15 +46,7 @@ export default function BoostingStatusPage() {
   const [showProgressSelector, setShowProgressSelector] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const ranks = [
-    "Bronze 1", "Bronze 2", "Bronze 3",
-    "Silver 1", "Silver 2", "Silver 3",
-    "Gold 1", "Gold 2", "Gold 3",
-    "Platinum 1", "Platinum 2", "Platinum 3",
-    "Diamond 1", "Diamond 2", "Diamond 3",
-    "Champion 1", "Champion 2", "Champion 3",
-    "Grand Champion", "Supersonic Legend"
-  ]
+  const ranks = rankOrder
 
   useEffect(() => {
     // Load boosting details from localStorage
@@ -103,6 +95,7 @@ export default function BoostingStatusPage() {
           filter: `chat_id=eq.${orderId}`
         },
         (payload) => {
+          console.log('New message:', payload)
           const newMsg = payload.new as any
           const message: Message = {
             id: newMsg.id,
@@ -135,8 +128,8 @@ export default function BoostingStatusPage() {
           filter: `chat_id=eq.${orderId}`
         },
         (payload) => {
+          console.log('Chat updated:', payload)
           const updatedChat = payload.new as any
-          console.log('Chat updated:', updatedChat)
           
           // Update progress data from chat
           if (updatedChat.current_rank) setCurrentRank(updatedChat.current_rank)
@@ -157,12 +150,15 @@ export default function BoostingStatusPage() {
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Subscription status:', status)
+      })
 
     return () => {
+      console.log('Unsubscribing...')
       if (supabase) supabase.removeChannel(channel)
     }
-  }, [orderId, game, initialRank, desiredRank])
+  }, [orderId, game])
 
   const loadMessages = async () => {
     if (!supabase) return
