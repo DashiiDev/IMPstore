@@ -49,6 +49,9 @@ export default function BoostingStatusPage() {
   const ranks = rankOrder
 
   useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return
+
     // Load boosting details from localStorage
     const boostingDetails = localStorage.getItem("boostingDetails")
     if (boostingDetails) {
