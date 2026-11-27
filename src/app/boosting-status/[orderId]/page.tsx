@@ -74,11 +74,9 @@ export default function BoostingStatusPage() {
     
     console.log('Role check - isDev:', isDev, 'isBooster:', isBooster)
     
-    if (isDev) setUserRole("dev")
-    else if (isBooster) setUserRole("booster")
-    else setUserRole("customer")
-    
-    console.log('Set userRole to:', userRole)
+    const role = isDev ? "dev" : isBooster ? "booster" : "customer"
+    setUserRole(role)
+    console.log('Set userRole to:', role)
   }, [])
 
   useEffect(() => {
@@ -114,7 +112,7 @@ export default function BoostingStatusPage() {
             senderRole: newMsg.sender_role as "dev" | "booster" | "customer",
             game: game,
             isProgressUpdate: newMsg.is_progress_update,
-            progressData: newMsg.progress_data ? JSON.parse(newMsg.progress_data) : undefined,
+            progressData: typeof newMsg.progress_data === 'string' ? JSON.parse(newMsg.progress_data) : newMsg.progress_data,
           }
           
           setMessages(prev => [...prev, message])
@@ -246,7 +244,7 @@ export default function BoostingStatusPage() {
           senderRole: msg.sender_role as "dev" | "booster" | "customer" | undefined,
           game: game,
           isProgressUpdate: msg.is_progress_update,
-          progressData: msg.progress_data ? JSON.parse(msg.progress_data) : undefined,
+          progressData: typeof msg.progress_data === 'string' ? JSON.parse(msg.progress_data) : msg.progress_data,
         }))
         setMessages(formattedMessages)
         

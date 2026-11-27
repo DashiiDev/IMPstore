@@ -75,13 +75,23 @@ export const rankOrder = [
   "Platinum 1", "Platinum 2", "Platinum 3", "Platinum 4", "Platinum 5",
   "Diamond 1", "Diamond 2", "Diamond 3", "Diamond 4", "Diamond 5",
   "Champion 1", "Champion 2", "Champion 3", "Champion 4", "Champion 5",
-  "Grand Champion"
+  "Grand Champion", "GC"
 ]
+
+// Normalize rank name (GC -> Grand Champion)
+export const normalizeRankName = (rankName: string): string => {
+  if (rankName === "GC") return "Grand Champion"
+  return rankName
+}
 
 // Calculate progress percentage considering rank + division
 export const calculateProgress = (initialRank: string, currentRank: string, desiredRank: string, currentDivision: number = 1) => {
-  const currentIndex = rankOrder.indexOf(currentRank)
-  const desiredIndex = rankOrder.indexOf(desiredRank)
+  const normalizedCurrent = normalizeRankName(currentRank)
+  const normalizedDesired = normalizeRankName(desiredRank)
+  const normalizedInitial = normalizeRankName(initialRank)
+  
+  const currentIndex = rankOrder.indexOf(normalizedCurrent)
+  const desiredIndex = rankOrder.indexOf(normalizedDesired)
   
   console.log('Progress calculation:', { initialRank, currentRank, desiredRank, currentDivision, currentIndex, desiredIndex })
   
@@ -94,7 +104,7 @@ export const calculateProgress = (initialRank: string, currentRank: string, desi
   // Calculate with division
   const currentTotalValue = currentIndex * 5 + currentDivision
   const desiredTotalValue = desiredIndex * 5 + 5 // Assume division 5 for desired
-  const initialTotalValue = rankOrder.indexOf(initialRank) * 5 + 1
+  const initialTotalValue = rankOrder.indexOf(normalizedInitial) * 5 + 1
   
   const totalSteps = desiredTotalValue - initialTotalValue
   const currentSteps = currentTotalValue - initialTotalValue
@@ -111,14 +121,15 @@ export const calculateProgress = (initialRank: string, currentRank: string, desi
 
 // Get rank image by name and game
 export const getRankImage = (rankName: string, game: string): string => {
+  const normalizedRank = normalizeRankName(rankName)
   const gameData = gamesData[game]
   if (!gameData) {
     console.log('Game not found:', game)
     return ""
   }
-  const rank = gameData.ranks.find(r => r.name === rankName)
+  const rank = gameData.ranks.find(r => r.name === normalizedRank)
   if (!rank) {
-    console.log('Rank not found:', rankName, 'in game:', game)
+    console.log('Rank not found:', normalizedRank, 'in game:', game)
     return ""
   }
   console.log('Found rank image:', rank.image)
