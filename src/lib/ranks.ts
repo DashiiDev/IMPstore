@@ -83,7 +83,12 @@ export const calculateProgress = (initialRank: string, currentRank: string, desi
   const currentIndex = rankOrder.indexOf(currentRank)
   const desiredIndex = rankOrder.indexOf(desiredRank)
   
-  if (currentIndex === -1 || desiredIndex === -1) return 0
+  console.log('Progress calculation:', { initialRank, currentRank, desiredRank, currentDivision, currentIndex, desiredIndex })
+  
+  if (currentIndex === -1 || desiredIndex === -1) {
+    console.log('Invalid rank index')
+    return 0
+  }
   if (desiredIndex <= currentIndex) return 100 // Already at or past desired rank
   
   // Calculate with division
@@ -94,16 +99,28 @@ export const calculateProgress = (initialRank: string, currentRank: string, desi
   const totalSteps = desiredTotalValue - initialTotalValue
   const currentSteps = currentTotalValue - initialTotalValue
   
+  console.log('Progress values:', { currentTotalValue, desiredTotalValue, initialTotalValue, totalSteps, currentSteps })
+  
   if (currentSteps <= 0) return 0
   if (currentSteps >= totalSteps) return 100
   
-  return Math.round((currentSteps / totalSteps) * 100)
+  const percentage = Math.round((currentSteps / totalSteps) * 100)
+  console.log('Calculated percentage:', percentage)
+  return percentage
 }
 
 // Get rank image by name and game
 export const getRankImage = (rankName: string, game: string): string => {
   const gameData = gamesData[game]
-  if (!gameData) return ""
+  if (!gameData) {
+    console.log('Game not found:', game)
+    return ""
+  }
   const rank = gameData.ranks.find(r => r.name === rankName)
-  return rank?.image || ""
+  if (!rank) {
+    console.log('Rank not found:', rankName, 'in game:', game)
+    return ""
+  }
+  console.log('Found rank image:', rank.image)
+  return rank.image
 }
