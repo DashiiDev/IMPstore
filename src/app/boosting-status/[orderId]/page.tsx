@@ -454,7 +454,7 @@ export default function BoostingStatusPage() {
                   <p className="text-green-400 font-semibold text-lg">{desiredRank || "Not set"}</p>
                 </div>
 
-                {userRole === "booster" && (
+                {(userRole === "booster" || userRole === "dev") && (
                   <button
                     onClick={() => setShowProgressSelector(!showProgressSelector)}
                     className="w-full py-3 bg-[#2b2d31] hover:bg-[#404249] text-white rounded-lg font-semibold transition-colors"
